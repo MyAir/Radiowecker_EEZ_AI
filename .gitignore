@@ -1,0 +1,13 @@
+# Build and development folders
+.pio/
+.vscode/
+examples/
+
+# Sensitive data
+data/config.json
+
+# Thumbnails
+Thumbs.db
+
+# OS generated files
+.DS_Store
