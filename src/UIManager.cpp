@@ -1,6 +1,8 @@
 #include "UIManager.h"
 #include <ui.h>
 #include <screens.h>  // Include for the objects struct from EEZ Studio UI
+#include <vars.h>     // Include for EEZ global variable enums
+#include <eez-flow.h> // Include for EEZ flow framework
 #include <Preferences.h>
 #include "debug_config.h"
 
@@ -311,13 +313,13 @@ void UIManager::updateTimeUI() {
     if (getLocalTime(&timeinfo)) {
         strftime(timeString, sizeof(timeString), "%H:%M:%S", &timeinfo);
         
-        if (objects.current_time != NULL) {
-            lv_label_set_text(objects.current_time, timeString);
+        // Update EEZ global variable for UI data binding
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_EEZ_CURRENT_TIME, eez::StringValue(timeString));
+        
 #if TIME_DEBUG
-            Serial.print("Time updated: ");
-            Serial.println(timeString);
+        Serial.print("Time updated via EEZ global variable: ");
+        Serial.println(timeString);
 #endif
-        }
     }
 }
 
@@ -343,13 +345,13 @@ void UIManager::updateDateUI() {
                 timeinfo.tm_mon + 1, 
                 timeinfo.tm_year + 1900);
         
-        if (objects.current_date != NULL) {
-            lv_label_set_text(objects.current_date, dateString);
+        // Update EEZ global variable for UI data binding
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_CURRENT_DATE, eez::StringValue(dateString));
+        
 #if TIME_DEBUG
-            Serial.print("Date updated: ");
-            Serial.println(dateString);
+        Serial.print("Date updated via EEZ global variable: ");
+        Serial.println(dateString);
 #endif
-        }
     }
 }
 
