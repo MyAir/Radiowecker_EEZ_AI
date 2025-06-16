@@ -240,7 +240,12 @@ void UIManager::updateCO2(uint16_t eco2) {
 void UIManager::updateEnvironmentalData() {
     // Only proceed if sensors were initialized successfully
     if (sht31Initialized) {
-        // Read temperature and humidity from SHT31 (without reinitializing)
+        // Reinitialize I2C bus before reading from SHT31
+        Wire.end();
+        Wire.begin();
+        delay(10); // Short delay after I2C reinitialization
+        
+        // Read temperature and humidity from SHT31
         float temperature = sht31->readTemperature();
         float humidity = sht31->readHumidity();
         
@@ -263,6 +268,11 @@ void UIManager::updateEnvironmentalData() {
     }
     
     if (sgp30Initialized) {
+        // Reinitialize I2C bus before reading from SGP30
+        Wire.end();
+        Wire.begin();
+        delay(10); // Short delay after I2C reinitialization
+        
         // Read TVOC and eCO2 from SGP30
         if (sgp30->IAQmeasure()) {
             updateTVOC(sgp30->TVOC);
@@ -281,6 +291,18 @@ void UIManager::updateEnvironmentalData() {
 // SGP30 baseline management
 void UIManager::handleSGP30Baseline() {
     unsigned long currentTime = ::millis();
+    
+    #if SENSOR_DEBUG
+    // Debug output for baseline timing
+    Serial.print("handleSGP30Baseline called. Current time: ");
+    Serial.print(currentTime);
+    Serial.print(", lastBaselineTime: ");
+    Serial.print(lastBaselineTime);
+    Serial.print(", diff: ");
+    Serial.print(currentTime - lastBaselineTime);
+    Serial.print(", threshold: ");
+    Serial.println(SGP30_BASELINE_INTERVAL_MS);
+    #endif
     
     // Check if it's time to read/save the baseline (every hour)
     if ((currentTime - lastBaselineTime) >= SGP30_BASELINE_INTERVAL_MS) {
@@ -496,6 +518,16 @@ bool UIManager::initWeatherService(const String& apiKey, float latitude, float l
 
 // Update weather data if needed and update the UI
 void UIManager::updateWeatherData() {
+    unsigned long currentTime = ::millis();
+    
+    // Debug output for weather timing
+    Serial.print("updateWeatherData called. Current time: ");
+    Serial.print(currentTime);
+    Serial.print(", lastWeatherUpdateTime: ");
+    Serial.print(lastWeatherUpdateTime);
+    Serial.print(", diff: ");
+    Serial.println(currentTime - lastWeatherUpdateTime);
+    
     // Check if WiFi is connected - can't update weather without network
     if (WiFi.status() != WL_CONNECTED) {
         #if WEATHER_DEBUG
