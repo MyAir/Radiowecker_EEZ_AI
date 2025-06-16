@@ -408,26 +408,26 @@ void UIManager::updateWiFiStatusUI() {
         // Convert RSSI to quality percentage (typically, -50dBm is excellent, -100dBm is poor)
         int quality = constrain(map(rssi, -100, -50, 0, 100), 0, 100);
         
-        // Create quality string with WiFi symbol and color based on quality
-        String colorTag;
+        // Create quality string with WiFi symbol and quality value
+        String qualityStr = String(LV_SYMBOL_WIFI) + " " + String(quality) + "%";
+        
+        // Select color based on signal quality
+        lv_color_t quality_color;
         
         // Color gradient from red to yellow to green based on quality
         if (quality < 30) {
             // Poor signal - red
-            colorTag = "#FF0000 ";
+            quality_color = lv_color_hex(0xFF0000);
         } else if (quality < 50) {
             // Weak signal - orange
-            colorTag = "#FF8000 ";
+            quality_color = lv_color_hex(0xFF8000);
         } else if (quality < 70) {
             // Medium signal - yellow
-            colorTag = "#FFFF00 ";
+            quality_color = lv_color_hex(0xFFFF00);
         } else {
             // Good signal - green
-            colorTag = "#00FF00 ";
+            quality_color = lv_color_hex(0x00FF00);
         }
-        
-        // Format with LVGL color text: #RRGGBB followed by the text
-        String qualityStr = String(LV_SYMBOL_WIFI) + " " + colorTag + String(quality) + "%";
         
         // Debug output
 #if STATUS_DEBUG
@@ -450,6 +450,8 @@ void UIManager::updateWiFiStatusUI() {
 
         if (objects.obj0__wifi_quality_label != NULL) {
             lv_label_set_text(objects.obj0__wifi_quality_label, qualityStr.c_str());
+            // Apply the color directly to the label using style
+            lv_obj_set_style_text_color(objects.obj0__wifi_quality_label, quality_color, 0);
         }
     } else {
         // WiFi is not connected - update UI accordingly
@@ -462,8 +464,10 @@ void UIManager::updateWiFiStatusUI() {
         }
 
         if (objects.obj0__wifi_quality_label != NULL) {
-            // Show disconnected WiFi in red
-            lv_label_set_text(objects.obj0__wifi_quality_label, LV_SYMBOL_WIFI "  #FF0000 --");
+            // Show disconnected WiFi symbol with dashes
+            lv_label_set_text(objects.obj0__wifi_quality_label, LV_SYMBOL_WIFI "  --");
+            // Apply red color directly to the label using style
+            lv_obj_set_style_text_color(objects.obj0__wifi_quality_label, lv_color_hex(0xFF0000), 0);
         }
 
         

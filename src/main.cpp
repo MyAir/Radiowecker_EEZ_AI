@@ -555,11 +555,11 @@ void weatherUpdateTimerCallback(lv_timer_t *timer) {
 
 // Start all periodic tasks
 void startPeriodicTasks() {
-    // // Enable recoloring on the WiFi quality label to support colored text
-    // if (objects.obj0__wifi_quality_label != NULL) {
-    //     // Enable label recoloring to support HTML-style color tags
-    //     lv_obj_set_style_text_color(objects.obj0__wifi_quality_label, true);
-    // }
+    // Call the UIManager's updateWiFiStatusUI method to properly initialize the labels
+    // UIManager now handles applying the appropriate color to the WiFi quality label
+    if (uiManager) {
+        uiManager->updateWiFiStatusUI();
+    }
     
     // Create a timer that runs every 10 seconds (10000ms) for WiFi status updates
     wifi_status_timer = lv_timer_create(wifiStatusTimerCallback, 10000, NULL);
