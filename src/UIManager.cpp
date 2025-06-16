@@ -6,6 +6,7 @@
 #include <structs.h>  // Include for WeatherValue class
 #include <Preferences.h>
 #include "debug_config.h"
+#include "HardwareConfig.h"
 
 // Initialize static singleton instance to nullptr
 UIManager* UIManager::_instance = nullptr;
@@ -240,10 +241,8 @@ void UIManager::updateCO2(uint16_t eco2) {
 void UIManager::updateEnvironmentalData() {
     // Only proceed if sensors were initialized successfully
     if (sht31Initialized) {
-        // Reinitialize I2C bus before reading from SHT31
-        Wire.end();
-        Wire.begin();
-        delay(10); // Short delay after I2C reinitialization
+        // Check I2C bus status and reinitialize only if needed
+        reinitializeI2CBusIfNeeded();
         
         // Read temperature and humidity from SHT31
         float temperature = sht31->readTemperature();
@@ -268,10 +267,8 @@ void UIManager::updateEnvironmentalData() {
     }
     
     if (sgp30Initialized) {
-        // Reinitialize I2C bus before reading from SGP30
-        Wire.end();
-        Wire.begin();
-        delay(10); // Short delay after I2C reinitialization
+        // Check I2C bus status and reinitialize only if needed
+        reinitializeI2CBusIfNeeded();
         
         // Read TVOC and eCO2 from SGP30
         if (sgp30->IAQmeasure()) {

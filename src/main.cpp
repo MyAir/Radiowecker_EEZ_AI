@@ -12,6 +12,7 @@
 #include "ConfigManager.h"
 #include "debug_config.h"
 #include <screens.h>  // Include for the objects struct from EEZ Studio UI
+#include "HardwareConfig.h"  // Include for hardware configuration constants
 
 // Forward declarations
 void my_log_cb(lv_log_level_t level, const char *buf);
@@ -45,15 +46,7 @@ unsigned long lastWiFiUpdateTime = 0;
 UIManager* uiManager = nullptr;
 
 #include <ui.h>
-
-// SD Card pins
-#define SD_SCK  12
-#define SD_MISO 13
-#define SD_MOSI 11
-#define SD_CS   10
-
-// LVGL filesystem drive letter
-#define DRIVE_LETTER 'S'
+#include "HardwareConfig.h"
 
 // Forward declare SD card filesystem driver functions for LVGL
 static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode);
@@ -245,7 +238,7 @@ void setup()
     }
 
     // Initialize I2C bus for sensors once, before UIManager initialization
-    Wire.begin(17, 18, 100000);  // SDA=17, SCL=18, frequency=100kHz
+    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_FREQUENCY);  // Using constants from HardwareConfig.h
     
     // Initialize LVGL user interface
     ui_init();
