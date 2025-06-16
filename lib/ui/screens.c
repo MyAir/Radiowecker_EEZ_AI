@@ -729,6 +729,7 @@ void create_screen_main() {
                                                     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
                                                     lv_obj_set_style_align(obj, LV_ALIGN_TOP_MID, LV_PART_MAIN | LV_STATE_DEFAULT);
                                                     lv_obj_set_style_text_color(obj, lv_color_hex(theme_colors[eez_flow_get_selected_theme_index()][10]), LV_PART_MAIN | LV_STATE_DEFAULT);
+                                                    lv_obj_set_style_text_font(obj, &ui_font_ms14e, LV_PART_MAIN | LV_STATE_DEFAULT);
                                                     lv_label_set_text(obj, "Keine Daten");
                                                 }
                                             }

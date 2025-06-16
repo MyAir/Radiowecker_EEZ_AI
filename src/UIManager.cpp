@@ -3,6 +3,7 @@
 #include <screens.h>  // Include for the objects struct from EEZ Studio UI
 #include <vars.h>     // Include for EEZ global variable enums
 #include <eez-flow.h> // Include for EEZ flow framework
+#include <structs.h>  // Include for WeatherValue class
 #include <Preferences.h>
 #include "debug_config.h"
 
@@ -79,7 +80,7 @@ bool UIManager::initSensors() {
     }
     
     // Initialize the baseline timestamp
-    lastBaselineTime = millis();
+    lastBaselineTime = ::millis();
     
     return success;
 }
@@ -279,7 +280,7 @@ void UIManager::updateEnvironmentalData() {
 
 // SGP30 baseline management
 void UIManager::handleSGP30Baseline() {
-    unsigned long currentTime = millis();
+    unsigned long currentTime = ::millis();
     
     // Check if it's time to read/save the baseline (every hour)
     if ((currentTime - lastBaselineTime) >= SGP30_BASELINE_INTERVAL_MS) {
@@ -314,7 +315,7 @@ void UIManager::updateTimeUI() {
         strftime(timeString, sizeof(timeString), "%H:%M:%S", &timeinfo);
         
         // Update EEZ global variable for UI data binding
-        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_EEZ_CURRENT_TIME, eez::StringValue(timeString));
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_CURRENT_TIME, eez::StringValue(timeString));
         
 #if TIME_DEBUG
         Serial.print("Time updated via EEZ global variable: ");
@@ -505,7 +506,7 @@ void UIManager::updateWeatherData() {
     // Check if it's time to update (will only update if interval has passed)
     if (weatherService.update()) {
         // Update was performed, save the timestamp
-        lastWeatherUpdateTime = millis();
+        lastWeatherUpdateTime = ::millis();
         
         #if WEATHER_DEBUG
         Serial.println("Weather data updated successfully");

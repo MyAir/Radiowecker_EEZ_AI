@@ -3,6 +3,9 @@
 #include <screens.h>  // Include for the objects struct from EEZ Studio UI
 #include <images.h>  // Include for weather icon images
 #include <map>
+#include <vars.h>     // Include for EEZ global variable enums
+#include <eez-flow.h> // Include for EEZ flow framework
+#include <structs.h>  // Include for WeatherValue struct
 
 // Forward declaration for getIconForCode method
 const void* getIconForCode(const String& iconCode);
@@ -43,7 +46,7 @@ bool WeatherService::init(const String& apiKey, float latitude, float longitude,
 }
 
 bool WeatherService::update() {
-    uint32_t currentTime = millis();
+    uint32_t currentTime = ::millis();
     
     // Check if this is the first update after boot or if update interval has passed
     if (lastUpdateTime == 0 || currentTime - lastUpdateTime >= updateInterval) {
@@ -63,7 +66,7 @@ bool WeatherService::update() {
 bool WeatherService::forceUpdate() {
     bool success = fetchWeatherData();
     if (success) {
-        lastUpdateTime = millis();
+        lastUpdateTime = ::millis();
         calculateDailyForecasts();
         updateWeatherUI();
     }
@@ -777,11 +780,12 @@ void WeatherService::updateWeatherUI() {
         }
     }
 
-    if (objects.current_temp_label != nullptr) {
-        char temp_str[16];
-        snprintf(temp_str, sizeof(temp_str), "%.1f°C", currentWeather.temp);
-        lv_label_set_text(objects.current_temp_label, temp_str);
-    }
+    // Update the temperature in the CurrentWeather global struct instead of directly updating the label
+    // This allows data binding to work properly
+    eez::Value weatherValue = eez::flow::getGlobalVariable(FLOW_GLOBAL_VARIABLE_CURRENT_WEATHER);
+    WeatherValue weatherStruct(weatherValue);
+    weatherStruct.Temperature(currentWeather.temp);
+    eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_CURRENT_WEATHER, weatherStruct);
 
     if (objects.feels_like_label != nullptr) {
         char feels_like_str[32];

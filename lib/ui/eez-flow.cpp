@@ -4484,7 +4484,7 @@ ACTION_START(dropdownSetSelected)
     UINT32_PROP(value);
 #if LVGL_VERSION_MAJOR >= 9
 #if LVGL_VERSION_MINOR >= 3
-    lv_dropdown_set_selected(obj, value);
+    lv_dropdown_set_selected(obj, value, LV_ANIM_OFF);
 #else
     lv_dropdown_set_selected(obj, value);
 #endif
