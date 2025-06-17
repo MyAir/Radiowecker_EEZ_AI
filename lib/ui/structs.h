@@ -47,11 +47,11 @@ struct WeatherValue {
         value.getArray()->values[FLOW_STRUCTURE_WEATHER_FIELD_DT] = IntegerValue(dt);
     }
     
-    float Temperature() {
-        return value.getArray()->values[FLOW_STRUCTURE_WEATHER_FIELD_TEMPERATURE].getFloat();
+    const char *Temperature() {
+        return value.getArray()->values[FLOW_STRUCTURE_WEATHER_FIELD_TEMPERATURE].getString();
     }
-    void Temperature(float Temperature) {
-        value.getArray()->values[FLOW_STRUCTURE_WEATHER_FIELD_TEMPERATURE] = FloatValue(Temperature);
+    void Temperature(const char *Temperature) {
+        value.getArray()->values[FLOW_STRUCTURE_WEATHER_FIELD_TEMPERATURE] = StringValue(Temperature);
     }
 };
 

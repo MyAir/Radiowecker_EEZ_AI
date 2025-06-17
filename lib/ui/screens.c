@@ -1108,7 +1108,7 @@ void create_user_widget_status_bar(lv_obj_t *parent_obj, void *flowState, int st
                     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
                     lv_obj_set_style_align(obj, LV_ALIGN_LEFT_MID, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_color(obj, lv_color_hex(theme_colors[eez_flow_get_selected_theme_index()][1]), LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_label_set_text(obj, "WiFi: --");
+                    lv_label_set_text(obj, "");
                 }
                 {
                     // ipLabel
@@ -1118,7 +1118,7 @@ void create_user_widget_status_bar(lv_obj_t *parent_obj, void *flowState, int st
                     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
                     lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_color(obj, lv_color_hex(theme_colors[eez_flow_get_selected_theme_index()][1]), LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_label_set_text(obj, "IP: --");
+                    lv_label_set_text(obj, "");
                 }
                 {
                     // wifiQualityLabel
@@ -1128,7 +1128,7 @@ void create_user_widget_status_bar(lv_obj_t *parent_obj, void *flowState, int st
                     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
                     lv_obj_set_style_align(obj, LV_ALIGN_RIGHT_MID, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_color(obj, lv_color_hex(theme_colors[eez_flow_get_selected_theme_index()][1]), LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_label_set_text(obj, "-- %");
+                    lv_label_set_text(obj, "");
                 }
             }
         }
@@ -1138,6 +1138,33 @@ void create_user_widget_status_bar(lv_obj_t *parent_obj, void *flowState, int st
 void tick_user_widget_status_bar(void *flowState, int startWidgetIndex) {
     (void)flowState;
     (void)startWidgetIndex;
+    {
+        const char *new_val = evalTextProperty(flowState, 0, 3, "Failed to evaluate Text in Label widget");
+        const char *cur_val = lv_label_get_text(((lv_obj_t **)&objects)[startWidgetIndex + 1]);
+        if (strcmp(new_val, cur_val) != 0) {
+            tick_value_change_obj = ((lv_obj_t **)&objects)[startWidgetIndex + 1];
+            lv_label_set_text(((lv_obj_t **)&objects)[startWidgetIndex + 1], new_val);
+            tick_value_change_obj = NULL;
+        }
+    }
+    {
+        const char *new_val = evalTextProperty(flowState, 2, 3, "Failed to evaluate Text in Label widget");
+        const char *cur_val = lv_label_get_text(((lv_obj_t **)&objects)[startWidgetIndex + 2]);
+        if (strcmp(new_val, cur_val) != 0) {
+            tick_value_change_obj = ((lv_obj_t **)&objects)[startWidgetIndex + 2];
+            lv_label_set_text(((lv_obj_t **)&objects)[startWidgetIndex + 2], new_val);
+            tick_value_change_obj = NULL;
+        }
+    }
+    {
+        const char *new_val = evalTextProperty(flowState, 3, 3, "Failed to evaluate Text in Label widget");
+        const char *cur_val = lv_label_get_text(((lv_obj_t **)&objects)[startWidgetIndex + 3]);
+        if (strcmp(new_val, cur_val) != 0) {
+            tick_value_change_obj = ((lv_obj_t **)&objects)[startWidgetIndex + 3];
+            lv_label_set_text(((lv_obj_t **)&objects)[startWidgetIndex + 3], new_val);
+            tick_value_change_obj = NULL;
+        }
+    }
 }
 
 void change_color_theme(uint32_t theme_index) {

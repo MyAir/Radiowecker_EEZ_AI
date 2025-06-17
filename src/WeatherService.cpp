@@ -780,11 +780,13 @@ void WeatherService::updateWeatherUI() {
         }
     }
 
-    // Update the temperature in the CurrentWeather global struct instead of directly updating the label
-    // This allows data binding to work properly
+    // Update the temperature in the CurrentWeather global struct
+    // This allows data binding to work properly - format temperature as string with 1 decimal place
     eez::Value weatherValue = eez::flow::getGlobalVariable(FLOW_GLOBAL_VARIABLE_CURRENT_WEATHER);
     WeatherValue weatherStruct(weatherValue);
-    weatherStruct.Temperature(currentWeather.temp);
+    char temp_str[16];
+    snprintf(temp_str, sizeof(temp_str), "%.1f", currentWeather.temp); // Format with 1 decimal place
+    weatherStruct.Temperature(temp_str); // Store as string with 1 decimal
     eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_CURRENT_WEATHER, weatherStruct);
 
     if (objects.feels_like_label != nullptr) {

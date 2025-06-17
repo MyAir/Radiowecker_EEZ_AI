@@ -458,33 +458,36 @@ void UIManager::updateWiFiStatusUI() {
         Serial.println(qualityStr);
 #endif
         
-        // Update the UI labels
-        if (objects.obj0__wifi_label != NULL) {
-            lv_label_set_text(objects.obj0__wifi_label, ssid.c_str());
-        }
+        // Update global variables for data binding instead of UI elements directly
+        // The UI now adds fixed prefixes/suffixes like "WIFI: " and "IP: " in the GUI
+        
+        // Set SSID global variable
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_WIFI_SSID, eez::StringValue(ssid.c_str()));
+        
+        // Set IP global variable
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_WIFI_IP, eez::StringValue(ip.c_str()));
+        
+        // Set quality global variable (without % as the UI adds it)
+        String qualityNumOnly = String(quality); // Just the number without % or symbol
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_WIFI_QUALITY, eez::StringValue(qualityNumOnly.c_str()));
 
-        if (objects.obj0__ip_label != NULL) {
-            lv_label_set_text(objects.obj0__ip_label, ip.c_str());
-        }
-
+        // If we still need to apply color to a UI element, do so here
         if (objects.obj0__wifi_quality_label != NULL) {
-            lv_label_set_text(objects.obj0__wifi_quality_label, qualityStr.c_str());
-            // Apply the color directly to the label using style
             lv_obj_set_style_text_color(objects.obj0__wifi_quality_label, quality_color, 0);
         }
     } else {
-        // WiFi is not connected - update UI accordingly
-        if (objects.obj0__wifi_label != NULL) {
-            lv_label_set_text(objects.obj0__wifi_label, "Not Connected");
-        }
+        // WiFi is not connected - update global variables accordingly
+        // Set SSID global variable
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_WIFI_SSID, eez::StringValue("Not Connected"));
+        
+        // Set IP global variable
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_WIFI_IP, eez::StringValue("--.--.--.--"));
+        
+        // Set quality global variable
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_WIFI_QUALITY, eez::StringValue("--"));
 
-        if (objects.obj0__ip_label != NULL) {
-            lv_label_set_text(objects.obj0__ip_label, "--.--.--.--");
-        }
-
+        // If we still need color for the quality label, apply it here
         if (objects.obj0__wifi_quality_label != NULL) {
-            // Show disconnected WiFi symbol with dashes
-            lv_label_set_text(objects.obj0__wifi_quality_label, LV_SYMBOL_WIFI "  --");
             // Apply red color directly to the label using style
             lv_obj_set_style_text_color(objects.obj0__wifi_quality_label, lv_color_hex(0xFF0000), 0);
         }
