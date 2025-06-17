@@ -7,7 +7,7 @@
 #include <WiFi.h>
 #include <time.h>
 #include <ArduinoJson.h>
-#include "../lib/ui/ui.h"
+#include <ui.h>
 #include "UIManager.h"
 #include "ConfigManager.h"
 #include "debug_config.h"
