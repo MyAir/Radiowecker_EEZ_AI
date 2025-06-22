@@ -29,6 +29,7 @@ void timeUpdateTimerCallback(lv_timer_t *timer);
 void envSensorTimerCallback(lv_timer_t *timer);
 void weatherUpdateTimerCallback(lv_timer_t *timer);
 
+
 // LVGL display and input device
 lv_display_t * display = NULL;
 lv_indev_t * touch_indev = NULL;
@@ -120,13 +121,21 @@ void setup()
 {
     Serial.begin(115200);
     while(!Serial && millis() < 3000); // Wait up to 3 seconds for Serial
-    
+    delay(3000);
     if (Serial) {
         Serial.println("=====================================");
         Serial.println("   RadioWecker SLS AI - Starting    ");
         Serial.println("=====================================");
-        Serial.flush();
     }
+
+#if SYSTEM_DEBUG
+    if (psramFound()) {
+        Serial.printf("PSRAM found and initialized. Total size: %u bytes, Free: %u bytes\n", ESP.getPsramSize(), ESP.getFreePsram());
+    } else {
+        Serial.println("No PSRAM found or PSRAM failed to initialize.");
+    }
+#endif
+    Serial.flush();
 
     // Initialize display
     if (Serial) Serial.println("Initializing Display...");
