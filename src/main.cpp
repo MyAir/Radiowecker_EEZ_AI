@@ -15,6 +15,7 @@
 #include <screens.h>  // Include for the objects struct from EEZ Studio UI
 #include "HardwareConfig.h"  // Include for hardware configuration constants
 #include <ArduinoOTA.h>
+#include "OtaManager.h"
 
 // Forward declarations
 void my_log_cb(lv_log_level_t level, const char *buf);
@@ -30,7 +31,7 @@ void wifiStatusTimerCallback(lv_timer_t *timer);
 void timeUpdateTimerCallback(lv_timer_t *timer);
 void envSensorTimerCallback(lv_timer_t *timer);
 void weatherUpdateTimerCallback(lv_timer_t *timer);
-void initializeOTA();
+
 
 
 // LVGL display and input device
@@ -48,6 +49,9 @@ unsigned long lastWiFiUpdateTime = 0;
 
 // UIManager instance
 UIManager* uiManager = nullptr;
+
+// OtaManager instance
+OtaManager otaManager;
 
 #include <ui.h>
 #include "HardwareConfig.h"
@@ -119,6 +123,8 @@ void my_touchpad_read(lv_indev_t *drv, lv_indev_data_t *data)
 uint32_t my_tick_get_cb(void) {
     return millis();
 }
+
+
 
 void setup()
 {
@@ -254,7 +260,8 @@ void setup()
     // Initialize I2C bus for sensors once, before UIManager initialization
     Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_FREQUENCY);  // Using constants from HardwareConfig.h
     
-    // Initialize LVGL user interface
+    // OTA is initialized in connectToWiFi() after a successful connection
+
     ui_init();
     
     // Initialize UIManager and sensors
@@ -279,48 +286,7 @@ void setup()
     Serial.println("Setup done");
 }
 
-void initializeOTA() {
-    ArduinoOTA
-        .onStart([]() {
-            // Disable touch input during OTA update
-            lv_indev_enable(lv_indev_get_next(NULL), false);
-            String type;
-            if (ArduinoOTA.getCommand() == U_FLASH)
-            {
-                type = "sketch";
-            } else
-            { // U_SPIFFS (filesystem)
-                type = "filesystem";
-            }
-            // NOTE: if updating filesystem (FFat), contents must be mounted since we start fresh
-            Serial.println("Start updating " + type);
-        })
-        .onEnd([]() {
-            // Re-enable touch input
-            lv_indev_enable(lv_indev_get_next(NULL), true);
-            Serial.println("\nEnd");
-        })
-        .onProgress([](unsigned int progress, unsigned int total) {
-            // Refresh the display during the update to prevent flicker
-            lv_timer_handler(); 
-            Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-        })
-        .onError([](ota_error_t error) {
-            // Re-enable touch input on error
-            lv_indev_enable(lv_indev_get_next(NULL), true);
-            Serial.printf("Error[%u]: ", error);
-            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-            else if (error == OTA_END_ERROR) Serial.println("End Failed");
-        });
 
-    ArduinoOTA.setHostname("RadioWeckerAI"); // The .local will be added automatically
-    ArduinoOTA.setPassword("admin");
-    ArduinoOTA.begin();
-    Serial.println("OTA Initialized");
-}
 
 void connectToWiFi() {
 #if WIFI_DEBUG
@@ -375,8 +341,8 @@ void connectToWiFi() {
     Serial.println("\nWiFi connected! IP address: " + WiFi.localIP().toString());
 #endif
     
-    // After connecting to WiFi, initialize OTA, NTP, and other services
-    initializeOTA();
+    // After connecting to WiFi, initialize OTA
+    otaManager.begin();
     syncTimeFromNTP();
     // Check if UIManager is initialized before initializing weather
     if (!uiManager) {
