@@ -2,6 +2,7 @@
 .pio/
 .vscode/
 examples/
+lib/ui - old/
 
 # Sensitive data
 data/config.json
