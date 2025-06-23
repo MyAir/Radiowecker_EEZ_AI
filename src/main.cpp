@@ -88,17 +88,15 @@ void my_log_cb(lv_log_level_t level, const char *buf)
 }
 #endif
 
-/* Display flushing with endianness fix for LVGL/LovyanGFX compatibility */
+/* Display flushing using low-level LovyanGFX commands for robustness */
 void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
     uint32_t w = area->x2 - area->x1 + 1;
     uint32_t h = area->y2 - area->y1 + 1;
 
-    if (gfx.getStartCount() == 0) {
-        gfx.startWrite();
-    }
-
-    gfx.pushImage(area->x1, area->y1, w, h, reinterpret_cast<const uint16_t*>(px_map));
+    gfx.startWrite();
+    gfx.setAddrWindow(area->x1, area->y1, w, h);
+    gfx.writePixels(reinterpret_cast<uint16_t*>(px_map), w * h);
     gfx.endWrite();
 
     lv_display_flush_ready(disp);
@@ -162,8 +160,7 @@ void setup()
             Serial.printf("Display initialized: %dx%d\n", gfx.width(), gfx.height());
         }
         
-        // Ensure LGFX swaps RGB565 byte order internally so we can pass little-endian data directly.
-        gfx.setSwapBytes(true);
+        // LVGL will handle byte swapping via LV_COLOR_16_SWAP, so no need for LovyanGFX to do it.
 
         // Clear screen before starting LVGL
         gfx.fillScreen(0x0000);
@@ -181,25 +178,26 @@ void setup()
 
     Serial.println("LVGL initialized");
 
-    // Create display and attach the flushing function
+    // Create a display driver
     display = lv_display_create(screenWidth, screenHeight);
     lv_display_set_flush_cb(display, my_disp_flush);
 
-    // Allocate a dedicated full-screen LVGL draw buffer in PSRAM (little-endian)
-    static lv_color_t* lvgl_fb = static_cast<lv_color_t*>(heap_caps_malloc(
-        screenWidth * screenHeight * sizeof(lv_color_t),
-        MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+    // Use PARTIAL_MODE with two buffers in PSRAM.
+    // This is a robust and flicker-free approach when driver-level double buffering is not available or configured.
+    if (Serial) Serial.println("Allocating LVGL draw buffers in PSRAM for PARTIAL_MODE.");
+    uint32_t buf_size = screenWidth * 100 * sizeof(lv_color_t); // 100 lines buffer
+    void *ps_buf1 = ps_malloc(buf_size);
+    void *ps_buf2 = ps_malloc(buf_size);
 
-    if (!lvgl_fb) {
-        Serial.println("ERROR: Unable to allocate LVGL framebuffer. Falling back to partial buffer.");
-        static lv_color_t fallback_buf[screenWidth * 40];
-        lv_display_set_buffers(display, fallback_buf, NULL,
-                               sizeof(lv_color_t) * screenWidth * 40,
-                               LV_DISPLAY_RENDER_MODE_PARTIAL);
+    if (ps_buf1 && ps_buf2) {
+        lv_display_set_buffers(display, ps_buf1, ps_buf2, buf_size, LV_DISPLAY_RENDER_MODE_PARTIAL);
+        if (Serial) Serial.println("LVGL configured for PARTIAL_MODE with PSRAM buffers.");
     } else {
-        lv_display_set_buffers(display, lvgl_fb, NULL,
-                               screenWidth * screenHeight * sizeof(lv_color_t),
-                               LV_DISPLAY_RENDER_MODE_FULL);
+        if (Serial) Serial.println("PSRAM allocation failed. Using smaller internal RAM buffers as a fallback.");
+        // Fallback to smaller internal RAM buffers if PSRAM allocation fails
+        static lv_color_t int_buf1[screenWidth * 10];
+        static lv_color_t int_buf2[screenWidth * 10];
+        lv_display_set_buffers(display, int_buf1, int_buf2, sizeof(int_buf1), LV_DISPLAY_RENDER_MODE_PARTIAL);
     }
 
     // Initialize touch

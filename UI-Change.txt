@@ -1,0 +1,32 @@
+**UI Change Instructions for EEZ Studio (Revision 8 - Simplification Test):**
+
+**Goal:** Determine if the complexity of the `AlarmEntry` widget is the cause of the stack overflow crash.
+
+**Observation:** You have successfully removed the pop-up keyboard and calendar, but the crash persists. The error is a "Stack canary watchpoint," which indicates a stack overflow. This is very likely caused by LVGL's layout system going into a deep recursion when trying to calculate the size and position of the many nested objects inside your `AlarmEntry` widget.
+
+**Solution:** We will perform a test by temporarily replacing the complex `AlarmEntry` with a very simple placeholder. If the crash stops, it proves the complexity is the root cause.
+
+**Please perform the following steps in EEZ Studio:**
+
+**1. Create a *New* Simple User Widget:**
+   - Create a new User Widget named `AlarmEntrySimple`.
+   - Inside this new widget, add only **one** object: a basic **Container**.
+   - Select this container and set its properties:
+     - **Size Panel:** `Width: 100%`, `Height: 50px` (a fixed, small height).
+     - **Style Panel:** Give it a visible background color (e.g., blue) so we can see it.
+   - You can add a simple Label inside it saying "Test" if you like.
+
+**2. Replace `AlarmEntry` on the Alarms Screen:**
+   - Go to your `Alarms` screen in the editor.
+   - Delete the three instances of the original `AlarmEntry` widget from your list (`alarms_panel`).
+   - Drag three instances of your new `AlarmEntrySimple` widget into the list.
+
+**3. Regenerate and Test:**
+   - Save the project and **regenerate the UI files**.
+   - Build and upload the new code to your device.
+   - Navigate to the Alarms screen.
+
+**Expected Outcome:**
+The Alarms screen should now display three simple blue boxes without crashing.
+
+If this test is successful, it confirms the `AlarmEntry` layout needs to be rebuilt with fewer nested containers. We can then work on a more efficient layout.

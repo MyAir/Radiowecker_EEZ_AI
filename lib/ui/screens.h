@@ -10,6 +10,7 @@ extern "C" {
 typedef struct _objects_t {
     lv_obj_t *main;
     lv_obj_t *menu;
+    lv_obj_t *alarms;
     lv_obj_t *obj0;
     lv_obj_t *obj0__status_bar;
     lv_obj_t *obj0__wifi_label;
@@ -20,8 +21,24 @@ typedef struct _objects_t {
     lv_obj_t *obj1__wifi_label;
     lv_obj_t *obj1__ip_label;
     lv_obj_t *obj1__wifi_quality_label;
-    lv_obj_t *content;
     lv_obj_t *obj2;
+    lv_obj_t *obj2__status_bar;
+    lv_obj_t *obj2__wifi_label;
+    lv_obj_t *obj2__ip_label;
+    lv_obj_t *obj2__wifi_quality_label;
+    lv_obj_t *alarm_entry_1;
+    lv_obj_t *alarm_entry_1__alarm_entry_panel;
+    lv_obj_t *alarm_entry_1__alarm_entry_container;
+    lv_obj_t *alarm_entry_2;
+    lv_obj_t *alarm_entry_2__alarm_entry_panel;
+    lv_obj_t *alarm_entry_2__alarm_entry_container;
+    lv_obj_t *alarm_entry_3;
+    lv_obj_t *alarm_entry_3__alarm_entry_panel;
+    lv_obj_t *alarm_entry_3__alarm_entry_container;
+    lv_obj_t *content;
+    lv_obj_t *back_button;
+    lv_obj_t *alarms_menu_button;
+    lv_obj_t *back_button_1;
     lv_obj_t *panel_content;
     lv_obj_t *time_panel;
     lv_obj_t *current_date;
@@ -81,6 +98,19 @@ typedef struct _objects_t {
     lv_obj_t *night_icon;
     lv_obj_t *night_temp_label;
     lv_obj_t *night_rain_label;
+    lv_obj_t *menu_container;
+    lv_obj_t *menu_items_content_container;
+    lv_obj_t *button_panel;
+    lv_obj_t *menu_content_container;
+    lv_obj_t *menu_panel;
+    lv_obj_t *alarms_container;
+    lv_obj_t *alarm_menu_content_container;
+    lv_obj_t *alarm_button_panel;
+    lv_obj_t *alarms_content_container;
+    lv_obj_t *alarms_title_container;
+    lv_obj_t *alarms_active_label_1;
+    lv_obj_t *alarms_active_switch_1;
+    lv_obj_t *alarms_panel;
 } objects_t;
 
 extern objects_t objects;
@@ -88,6 +118,7 @@ extern objects_t objects;
 enum ScreensEnum {
     SCREEN_ID_MAIN = 1,
     SCREEN_ID_MENU = 2,
+    SCREEN_ID_ALARMS = 3,
 };
 
 void create_screen_main();
@@ -96,8 +127,14 @@ void tick_screen_main();
 void create_screen_menu();
 void tick_screen_menu();
 
+void create_screen_alarms();
+void tick_screen_alarms();
+
 void create_user_widget_status_bar(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex);
 void tick_user_widget_status_bar(void *flowState, int startWidgetIndex);
+
+void create_user_widget_alarm_entry(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex);
+void tick_user_widget_alarm_entry(void *flowState, int startWidgetIndex);
 
 enum Themes {
     THEME_ID_DARK,
@@ -115,9 +152,10 @@ enum Colors {
     COLOR_ID_PANEL_WEATHER_CURRENT,
     COLOR_ID_PANEL_WEATHER_FORECAST,
     COLOR_ID_TEXT_WEATHER,
+    COLOR_ID_ALARM_ENTRY_BACKGROUND,
 };
 void change_color_theme(uint32_t themeIndex);
-extern uint32_t theme_colors[2][11];
+extern uint32_t theme_colors[2][12];
 
 void tick_screen_by_id(enum ScreensEnum screenId);
 void tick_screen(int screen_index);
