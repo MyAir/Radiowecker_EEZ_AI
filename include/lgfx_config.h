@@ -77,6 +77,7 @@ public:
     {
       auto cfg = _light_instance.config();
       cfg.pin_bl = GPIO_NUM_44;  // Custom hardware modification - backlight control
+      cfg.invert = true;       // PWM signal is inverted
       _light_instance.config(cfg);
     }
     _panel_instance.light(&_light_instance);
