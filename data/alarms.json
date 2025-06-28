@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "active": true,
+    "title": "Wake Up",
+    "hour": 7,
+    "minute": 30,
+    "repeat": true,
+    "weekdays": [true, true, true, true, true, false, false],
+    "date": ""
+  },
+  {
+    "id": 2,
+    "active": false,
+    "title": "Doctor's Appointment",
+    "hour": 10,
+    "minute": 0,
+    "repeat": false,
+    "weekdays": [false, false, false, false, false, false, false],
+    "date": "15.08.2025"
+  }
+]

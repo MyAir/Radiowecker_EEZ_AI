@@ -62,3 +62,8 @@
 #ifndef WEATHER_DEBUG
   #define WEATHER_DEBUG 0
 #endif
+
+// Controls debug output for the Alarm Manager
+#ifndef ALARM_DEBUG
+  #define ALARM_DEBUG 1
+#endif
