@@ -40,8 +40,11 @@ typedef struct _objects_t {
     lv_obj_t *add_alarm_button;
     lv_obj_t *edit_alarm_button;
     lv_obj_t *alarm_repeat_switch;
+    lv_obj_t *show_calendar_button;
     lv_obj_t *save_alarm_button;
     lv_obj_t *cancel_alarm_button;
+    lv_obj_t *date_selection_ok_button;
+    lv_obj_t *date_selection_cancel_button;
     lv_obj_t *panel_content;
     lv_obj_t *time_panel;
     lv_obj_t *current_date;
@@ -138,7 +141,6 @@ typedef struct _objects_t {
     lv_obj_t *date_value_fields_container;
     lv_obj_t *date_value_container_1;
     lv_obj_t *alarm_date_label;
-    lv_obj_t *show_calendar_button;
     lv_obj_t *weekday_container;
     lv_obj_t *weekday_label_container;
     lv_obj_t *weekday_label;
@@ -227,11 +229,12 @@ enum Colors {
     COLOR_ID_PANEL_WEATHER_FORECAST,
     COLOR_ID_TEXT_WEATHER,
     COLOR_ID_ALARM_ENTRY_BACKGROUND,
+    COLOR_ID_ALARM_ENTRY_BACKGROUND_FOCUSED,
     COLOR_ID_BUTTON_RED,
     COLOR_ID_BUTTON_GREEN,
 };
 void change_color_theme(uint32_t themeIndex);
-extern uint32_t theme_colors[2][14];
+extern uint32_t theme_colors[2][15];
 
 void tick_screen_by_id(enum ScreensEnum screenId);
 void tick_screen(int screen_index);
