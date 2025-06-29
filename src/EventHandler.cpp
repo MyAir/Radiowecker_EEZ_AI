@@ -87,6 +87,14 @@ static void populate_alarm_edit_screen() {
         lv_obj_clear_state(objects.saturday_checkbox, LV_STATE_CHECKED);
         lv_obj_clear_state(objects.sunday_checkbox, LV_STATE_CHECKED);
         lv_label_set_text(objects.alarm_date_label, "");
+
+        // Manually trigger the VALUE_CHANGED event to ensure the UI (e.g., panels)
+        // updates based on the switch's new state. This is necessary because
+        // lv_obj_add/clear_state does not fire this event automatically.
+        #if ALARM_DEBUG
+        Serial.println("Manually sending VALUE_CHANGED event to alarm_repeat_switch for new alarm.");
+        #endif
+        lv_obj_send_event(objects.alarm_repeat_switch, LV_EVENT_VALUE_CHANGED, NULL);
     }
 }
 
