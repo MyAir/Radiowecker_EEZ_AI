@@ -264,6 +264,14 @@ void setup()
 
     ui_init();
 
+    // Assign event handlers for alarm functionality
+    lv_obj_add_event_cb(objects.alarm_edit_screen, alarm_edit_screen_load_handler, LV_EVENT_SCREEN_LOAD_START, NULL);
+    lv_obj_add_event_cb(objects.alarm_edit_screen, alarm_edit_screen_load_handler, LV_EVENT_SCREEN_LOADED, NULL);
+    lv_obj_add_event_cb(objects.alarm_edit_screen, alarm_edit_screen_load_handler, LV_EVENT_SCREEN_UNLOAD_START, NULL);
+    // Event handlers for save, cancel, add, and edit buttons are now assigned in EEZ-Flow Studio.
+    // Removing the manual registration here to prevent double execution.
+    lv_obj_add_event_cb(objects.delete_alarm_button, delete_button_event_handler, LV_EVENT_CLICKED, NULL);
+
     // Initialize AlarmManager. The constructor now handles loading alarms.
     AlarmManager* am = AlarmManager::getInstance();
 

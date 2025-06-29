@@ -12,4 +12,7 @@ void alarm_entry_click_event_handler(lv_event_t *e);
 void edit_button_event_handler(lv_event_t *e);
 void delete_button_event_handler(lv_event_t *e);
 
+// Event handler for the alarm title text area to manage the keyboard
+void alarm_title_textarea_event_handler(lv_event_t * e);
+
 #endif // EVENT_HANDLER_H
