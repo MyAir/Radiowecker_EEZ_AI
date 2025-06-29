@@ -73,7 +73,7 @@ static void event_handler_cb_alarms_add_alarm_button(lv_event_t *e) {
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
     
-    if (event == LV_EVENT_PRESSED) {
+    if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         flowPropagateValueLVGLEvent(flowState, 9, 0, e);
     }
@@ -84,9 +84,39 @@ static void event_handler_cb_alarms_edit_alarm_button(lv_event_t *e) {
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
     
-    if (event == LV_EVENT_PRESSED) {
+    if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         flowPropagateValueLVGLEvent(flowState, 11, 0, e);
+    }
+}
+
+static void event_handler_cb_alarms_delete_alarm_button(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    void *flowState = lv_event_get_user_data(e);
+    (void)flowState;
+    
+    if (event == LV_EVENT_CLICKED) {
+        e->user_data = (void *)0;
+        flowPropagateValueLVGLEvent(flowState, 13, 0, e);
+    }
+}
+
+static void event_handler_cb_alarm_edit_screen_alarm_edit_screen(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    void *flowState = lv_event_get_user_data(e);
+    (void)flowState;
+    
+    if (event == LV_EVENT_SCREEN_LOADED) {
+        e->user_data = (void *)0;
+        flowPropagateValueLVGLEvent(flowState, 1, 0, e);
+    }
+    if (event == LV_EVENT_SCREEN_UNLOAD_START) {
+        e->user_data = (void *)0;
+        flowPropagateValueLVGLEvent(flowState, 1, 1, e);
+    }
+    if (event == LV_EVENT_SCREEN_LOAD_START) {
+        e->user_data = (void *)0;
+        flowPropagateValueLVGLEvent(flowState, 1, 2, e);
     }
 }
 
@@ -122,7 +152,7 @@ static void event_handler_cb_alarm_edit_screen_save_alarm_button(lv_event_t *e) 
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
     
-    if (event == LV_EVENT_PRESSED) {
+    if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         flowPropagateValueLVGLEvent(flowState, 67, 0, e);
     }
@@ -133,7 +163,7 @@ static void event_handler_cb_alarm_edit_screen_cancel_alarm_button(lv_event_t *e
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
     
-    if (event == LV_EVENT_PRESSED) {
+    if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         flowPropagateValueLVGLEvent(flowState, 69, 0, e);
     }
@@ -1484,6 +1514,7 @@ void create_screen_alarms() {
                                             lv_obj_set_pos(obj, 470, 215);
                                             lv_obj_set_size(obj, 100, 50);
                                             lv_obj_add_event_cb(obj, event_handler_cb_alarms_edit_alarm_button, LV_EVENT_ALL, flowState);
+                                            lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE);
                                             lv_obj_add_state(obj, LV_STATE_DISABLED);
                                             {
                                                 lv_obj_t *parent_obj = obj;
@@ -1503,6 +1534,8 @@ void create_screen_alarms() {
                                             objects.delete_alarm_button = obj;
                                             lv_obj_set_pos(obj, 470, 215);
                                             lv_obj_set_size(obj, 100, 50);
+                                            lv_obj_add_event_cb(obj, event_handler_cb_alarms_delete_alarm_button, LV_EVENT_ALL, flowState);
+                                            lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE);
                                             lv_obj_add_state(obj, LV_STATE_DISABLED);
                                             {
                                                 lv_obj_t *parent_obj = obj;
@@ -1642,6 +1675,7 @@ void create_screen_alarm_edit_screen() {
     objects.alarm_edit_screen = obj;
     lv_obj_set_pos(obj, 0, 0);
     lv_obj_set_size(obj, 800, 480);
+    lv_obj_add_event_cb(obj, event_handler_cb_alarm_edit_screen_alarm_edit_screen, LV_EVENT_ALL, flowState);
     lv_obj_set_style_border_color(obj, lv_color_hex(theme_colors[eez_flow_get_selected_theme_index()][2]), LV_PART_MAIN | LV_STATE_DEFAULT);
     {
         lv_obj_t *parent_obj = obj;
@@ -3403,7 +3437,7 @@ extern void add_style(lv_obj_t *obj, int32_t styleIndex);
 extern void remove_style(lv_obj_t *obj, int32_t styleIndex);
 
 static const char *screen_names[] = { "Main", "Menu", "Alarms", "AlarmEditScreen" };
-static const char *object_names[] = { "main", "menu", "alarms", "alarm_edit_screen", "obj0", "obj0__status_bar", "obj0__wifi_label", "obj0__ip_label", "obj0__wifi_quality_label", "obj1", "obj1__status_bar", "obj1__wifi_label", "obj1__ip_label", "obj1__wifi_quality_label", "obj2", "obj2__status_bar", "obj2__wifi_label", "obj2__ip_label", "obj2__wifi_quality_label", "obj3", "obj3__status_bar", "obj3__wifi_label", "obj3__ip_label", "obj3__wifi_quality_label", "content", "back_button", "obj4", "alarms_menu_button", "alarms_back_button", "add_alarm_button", "edit_alarm_button", "alarm_repeat_switch", "show_calendar_button", "save_alarm_button", "cancel_alarm_button", "date_selection_ok_button", "date_selection_cancel_button", "panel_content", "time_panel", "current_date", "current_time", "alarm_container", "alarm_panel", "alarm_text_container", "alarm_titile", "title", "album", "artist", "alarm_off_container", "alarm_off", "album_art_container", "album_art", "next_alarm", "sensor_panel", "sensor_title_container", "temp_title_container", "temp_title", "hum_title_container", "hum_title", "co2_title_container", "co2_title", "tvoc_title_container", "tvoc_title", "sensor_value_container", "temp_value_container", "temp_value", "hum_value_container", "hum_value", "co2_value_container", "co2_value", "tvoc_value_container", "tvoc_value", "weather_panel", "current_weather_container", "current_weather_panel", "current_weather_title_label", "current_weather_icon", "current_temp_label", "feels_like_label", "weather_desc_label", "weather_forecast_container", "morning_panel", "morning_title_label", "morning_icon", "morning_temp_label", "morning_rain_label", "afternoon_panel", "afternoon_title_label", "afternoon_icon", "afternoon_temp_label", "afternoon_rain_label", "night_panel", "night_title_label", "night_icon", "night_temp_label", "night_rain_label", "menu_container", "menu_items_content_container", "button_panel", "menu_content_container", "menu_panel", "alarms_container", "alarm_menu_content_container", "alarm_button_panel", "alarm_maintain_panel", "delete_alarm_button", "alarms_content_container", "alarms_title_container", "alarms_active_label_1", "alarms_active_switch_1", "alarms_panel", "alarm_edit_screen_container", "alarm_edit_screen_content_container", "alarm_edit_container", "alarm_edit_title_panel", "alarm_edit_title_lable", "alarm_edit_panel", "alarm_title_textarea", "time_container", "time_selection_container", "time_label_container", "time_label", "time_rollers_container", "hour_roller", "minute_roller", "alarm_repeat_container", "alarm_repeat_label", "date_container", "date_label_container", "date_label", "date_value_fields_container", "date_value_container_1", "alarm_date_label", "weekday_container", "weekday_label_container", "weekday_label", "weekday_value_fields_container", "monday_container", "monday_label_container", "monday_label", "monday_checkbox_container", "monday_checkbox", "tuesday_container", "tuesday_label_container", "tuesday_label", "tuesday_checkbox_container", "tuesday_checkbox", "wednesday_container", "wednesday_label_container", "wednesday_label", "wednesday_checkbox_container", "wednesday_checkbox", "thursday_container", "thursday_label_container", "thursday_label", "thursday_checkbox_container", "thursday_checkbox", "friday_container", "friday_label_container", "friday_label", "friday_checkbox_container", "friday_checkbox", "saturday_container", "saturday_label_container", "saturday_label", "saturday_checkbox_container", "saturday_checkbox", "sunday_container", "sunday_label_container", "sunday_label", "sunday_checkbox_container", "sunday_checkbox", "alarm_edit_button_panel", "calendar_popup_panel", "calendar_selector" };
+static const char *object_names[] = { "main", "menu", "alarms", "alarm_edit_screen", "obj0", "obj0__status_bar", "obj0__wifi_label", "obj0__ip_label", "obj0__wifi_quality_label", "obj1", "obj1__status_bar", "obj1__wifi_label", "obj1__ip_label", "obj1__wifi_quality_label", "obj2", "obj2__status_bar", "obj2__wifi_label", "obj2__ip_label", "obj2__wifi_quality_label", "obj3", "obj3__status_bar", "obj3__wifi_label", "obj3__ip_label", "obj3__wifi_quality_label", "content", "back_button", "obj4", "alarms_menu_button", "alarms_back_button", "add_alarm_button", "edit_alarm_button", "delete_alarm_button", "alarm_repeat_switch", "show_calendar_button", "save_alarm_button", "cancel_alarm_button", "date_selection_ok_button", "date_selection_cancel_button", "panel_content", "time_panel", "current_date", "current_time", "alarm_container", "alarm_panel", "alarm_text_container", "alarm_titile", "title", "album", "artist", "alarm_off_container", "alarm_off", "album_art_container", "album_art", "next_alarm", "sensor_panel", "sensor_title_container", "temp_title_container", "temp_title", "hum_title_container", "hum_title", "co2_title_container", "co2_title", "tvoc_title_container", "tvoc_title", "sensor_value_container", "temp_value_container", "temp_value", "hum_value_container", "hum_value", "co2_value_container", "co2_value", "tvoc_value_container", "tvoc_value", "weather_panel", "current_weather_container", "current_weather_panel", "current_weather_title_label", "current_weather_icon", "current_temp_label", "feels_like_label", "weather_desc_label", "weather_forecast_container", "morning_panel", "morning_title_label", "morning_icon", "morning_temp_label", "morning_rain_label", "afternoon_panel", "afternoon_title_label", "afternoon_icon", "afternoon_temp_label", "afternoon_rain_label", "night_panel", "night_title_label", "night_icon", "night_temp_label", "night_rain_label", "menu_container", "menu_items_content_container", "button_panel", "menu_content_container", "menu_panel", "alarms_container", "alarm_menu_content_container", "alarm_button_panel", "alarm_maintain_panel", "alarms_content_container", "alarms_title_container", "alarms_active_label_1", "alarms_active_switch_1", "alarms_panel", "alarm_edit_screen_container", "alarm_edit_screen_content_container", "alarm_edit_container", "alarm_edit_title_panel", "alarm_edit_title_lable", "alarm_edit_panel", "alarm_title_textarea", "time_container", "time_selection_container", "time_label_container", "time_label", "time_rollers_container", "hour_roller", "minute_roller", "alarm_repeat_container", "alarm_repeat_label", "date_container", "date_label_container", "date_label", "date_value_fields_container", "date_value_container_1", "alarm_date_label", "weekday_container", "weekday_label_container", "weekday_label", "weekday_value_fields_container", "monday_container", "monday_label_container", "monday_label", "monday_checkbox_container", "monday_checkbox", "tuesday_container", "tuesday_label_container", "tuesday_label", "tuesday_checkbox_container", "tuesday_checkbox", "wednesday_container", "wednesday_label_container", "wednesday_label", "wednesday_checkbox_container", "wednesday_checkbox", "thursday_container", "thursday_label_container", "thursday_label", "thursday_checkbox_container", "thursday_checkbox", "friday_container", "friday_label_container", "friday_label", "friday_checkbox_container", "friday_checkbox", "saturday_container", "saturday_label_container", "saturday_label", "saturday_checkbox_container", "saturday_checkbox", "sunday_container", "sunday_label_container", "sunday_label", "sunday_checkbox_container", "sunday_checkbox", "alarm_edit_button_panel", "calendar_popup_panel", "calendar_selector" };
 static const char *style_names[] = { "Default" };
 static const char *theme_names[] = { "Dark", "Light" };
 

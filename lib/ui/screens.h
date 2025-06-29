@@ -39,6 +39,7 @@ typedef struct _objects_t {
     lv_obj_t *alarms_back_button;
     lv_obj_t *add_alarm_button;
     lv_obj_t *edit_alarm_button;
+    lv_obj_t *delete_alarm_button;
     lv_obj_t *alarm_repeat_switch;
     lv_obj_t *show_calendar_button;
     lv_obj_t *save_alarm_button;
@@ -113,7 +114,6 @@ typedef struct _objects_t {
     lv_obj_t *alarm_menu_content_container;
     lv_obj_t *alarm_button_panel;
     lv_obj_t *alarm_maintain_panel;
-    lv_obj_t *delete_alarm_button;
     lv_obj_t *alarms_content_container;
     lv_obj_t *alarms_title_container;
     lv_obj_t *alarms_active_label_1;

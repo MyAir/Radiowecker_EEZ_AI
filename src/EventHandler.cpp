@@ -1,6 +1,6 @@
-#include "EventHandler.h"
 #include "AlarmManager.h"
-#include <ui.h> // For objects struct
+#include "EventHandler.h"
+#include "actions.h" // For objects struct
 #include "debug_config.h"
 #include <Arduino.h>
 #include <screens.h> // For objects struct
@@ -104,10 +104,9 @@ void alarm_edit_screen_load_handler(lv_event_t *e) {
         lv_obj_add_event_cb(objects.alarm_title_textarea, alarm_title_textarea_event_handler, LV_EVENT_ALL, NULL);
     } else if (code == LV_EVENT_SCREEN_LOADED) {
         #if ALARM_DEBUG
-        Serial.println("Alarm edit screen: LOADED. Population is handled by button events.");
+        Serial.println("Alarm edit screen: LOADED. Populating screen.");
         #endif
-        // Data population is now triggered by the button click handlers (add/edit)
-        // to ensure the correct alarm state is set before populating.
+        populate_alarm_edit_screen();
     } else if (code == LV_EVENT_SCREEN_UNLOAD_START) {
         #if ALARM_DEBUG
         Serial.println("Alarm edit screen: UNLOAD_START. Deleting keyboard.");
@@ -131,13 +130,25 @@ void save_button_event_handler(lv_event_t *e) {
         AlarmManager* am = AlarmManager::getInstance();
         Alarm alarm_data;
 
-        // Collect data from UI widgets
-        if (am->getEditMode() == AlarmEditMode::EDIT && am->getEditingAlarm() != nullptr) {
-            alarm_data.id = am->getEditingAlarm()->id;
+        // Determine if we are adding a new alarm or editing an existing one
+        if (am->getEditMode() == AlarmEditMode::EDIT) {
+            // Editing an existing alarm
+            const Alarm* current_alarm = am->getEditingAlarm();
+            if (current_alarm) {
+                alarm_data.id = current_alarm->id;
+            } else {
+                // Error state: in edit mode but no alarm is selected for editing.
+                #if ALARM_DEBUG
+                Serial.println("ERROR: Save clicked in EDIT mode, but no alarm is being edited.");
+                #endif
+                return; // Abort save
+            }
         } else {
+            // Adding a new alarm
             alarm_data.id = am->getNextAlarmId();
         }
 
+        // Collect data from UI widgets
         alarm_data.title = lv_textarea_get_text(objects.alarm_title_textarea);
         
         char buf[8];
@@ -173,10 +184,10 @@ void add_alarm_button_event_handler(lv_event_t *e) {
         #if ALARM_DEBUG
         Serial.println("Add Alarm button clicked. Setting state and populating screen.");
         #endif
+        AlarmManager::getInstance()->deselectAlarm(); // Deselect to prevent stray focus events on the next screen
         AlarmManager::getInstance()->startAddAlarm();
         // The screen transition is initiated by EEZ-Flow.
-        // The LV_EVENT_CLICKED handler runs after the screen is loaded, so we can populate it here.
-        populate_alarm_edit_screen();
+        // The population will be handled by the LV_EVENT_SCREEN_LOADED event.
     }
 }
 
@@ -191,15 +202,27 @@ void cancel_button_event_handler(lv_event_t *e) {
     }
 }
 
-// Event handler for clicking on an alarm entry
-void alarm_entry_click_event_handler(lv_event_t *e) {
+void alarm_entry_focus_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    if (code == LV_EVENT_CLICKED) {
-        lv_obj_t* target_obj = static_cast<lv_obj_t*>(lv_event_get_target(e));
-                // The user data is the alarm ID, cast from a pointer.
+    lv_obj_t* target_obj = static_cast<lv_obj_t*>(lv_event_get_target(e));
+
+    if (code == LV_EVENT_FOCUSED) {
         intptr_t alarm_id_ptr = reinterpret_cast<intptr_t>(lv_event_get_user_data(e));
         int alarm_id = static_cast<int>(alarm_id_ptr);
         AlarmManager::getInstance()->setSelectedAlarm(alarm_id, target_obj);
+
+        #if ALARM_DEBUG
+        Serial.printf("Alarm %d focused.\n", alarm_id);
+        #endif
+    } else if (code == LV_EVENT_DEFOCUSED) {
+        // Only deselect if an alarm is currently selected to prevent double-firing
+        if (AlarmManager::getInstance()->getSelectedAlarmId() != -1) {
+            AlarmManager::getInstance()->deselectAlarm();
+
+            #if ALARM_DEBUG
+            Serial.println("Alarm defocused.");
+            #endif
+        }
     }
 }
 
@@ -213,10 +236,10 @@ void edit_button_event_handler(lv_event_t *e) {
             #if ALARM_DEBUG
             Serial.printf("Edit button clicked for alarm %d. Setting state and populating screen.\n", alarmId);
             #endif
+            am->deselectAlarm(); // Deselect to prevent stray focus events on the next screen
             am->startEditAlarm(alarmId);
             // The screen transition is initiated by EEZ-Flow.
-            // The LV_EVENT_CLICKED handler runs after the screen is loaded, so we can populate it here.
-            populate_alarm_edit_screen();
+            // The population will be handled by the LV_EVENT_SCREEN_LOADED event.
         } else {
             #if ALARM_DEBUG
             Serial.println("Edit button clicked, but no alarm selected.");

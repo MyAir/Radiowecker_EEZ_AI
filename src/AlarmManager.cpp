@@ -255,9 +255,13 @@ void AlarmManager::populateAlarmList() {
         if (child_cnt_after > child_cnt_before) {
             lv_obj_t* new_widget = lv_obj_get_child(panel, child_cnt_after - 1);
             if (new_widget) {
-                lv_obj_add_flag(new_widget, LV_OBJ_FLAG_CLICKABLE);
-                extern void alarm_entry_click_event_handler(lv_event_t * e);
-                lv_obj_add_event_cb(new_widget, alarm_entry_click_event_handler, LV_EVENT_CLICKED, reinterpret_cast<void*>(static_cast<intptr_t>(alarm.id)));
+                // Make the widget focusable on click
+                lv_obj_add_flag(new_widget, LV_OBJ_FLAG_CLICK_FOCUSABLE);
+                // Get the new focus handler
+                extern void alarm_entry_focus_event_handler(lv_event_t * e);
+                // Add events for both focus and defocus
+                lv_obj_add_event_cb(new_widget, alarm_entry_focus_event_handler, LV_EVENT_FOCUSED, reinterpret_cast<void*>(static_cast<intptr_t>(alarm.id)));
+                lv_obj_add_event_cb(new_widget, alarm_entry_focus_event_handler, LV_EVENT_DEFOCUSED, reinterpret_cast<void*>(static_cast<intptr_t>(alarm.id)));
             }
         }
     }
@@ -277,9 +281,6 @@ void AlarmManager::setSelectedAlarm(int alarmId, lv_obj_t* obj) {
 
     if (m_selectedAlarmObj) {
         lv_obj_add_state(m_selectedAlarmObj, LV_STATE_CHECKED);
-        #if ALARM_DEBUG
-        Serial.printf("Alarm %d selected.\n", alarmId);
-        #endif
     }
 
     if (m_selectedAlarmId != -1) {
