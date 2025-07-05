@@ -266,3 +266,174 @@ void delete_button_event_handler(lv_event_t *e) {
         AlarmManager::getInstance()->deleteSelectedAlarm();
     }
 }
+
+// Static variables to store the original alarm date for cancel functionality
+static char original_alarm_date_text[16] = {0};
+static lv_calendar_date_t original_calendar_date = {0, 0, 0};
+static bool has_original_date = false;
+
+// Static variable to track the last selected date in calendar
+static lv_calendar_date_t last_selected_date = {0, 0, 0};
+static bool has_user_selected_date = false;
+
+// Date selection event handler - called via EEZ Studio VALUE_CHANGED event
+void calendar_date_selection_event_handler(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_VALUE_CHANGED) {
+        // Get the selected date from the calendar widget
+        lv_calendar_get_pressed_date(objects.calendar_selector, &last_selected_date);
+        has_user_selected_date = true;
+        
+        // Update the visual highlight on the calendar widget
+        lv_calendar_set_highlighted_dates(objects.calendar_selector, &last_selected_date, 1);
+        
+        #if ALARM_DEBUG
+        Serial.printf("[CALENDAR] Date selected: %02d.%02d.%04d (highlighted)\n", 
+                     last_selected_date.day, last_selected_date.month, last_selected_date.year);
+        #endif
+    }
+}
+
+// Helper function to parse date string and set calendar date
+static void parse_date_string_to_calendar(const char* date_str, lv_calendar_date_t* date) {
+    if (!date_str || strlen(date_str) == 0) {
+        // No date set, use today's date
+        time_t now = time(nullptr);
+        struct tm* timeinfo = localtime(&now);
+        date->year = timeinfo->tm_year + 1900;
+        date->month = timeinfo->tm_mon + 1;
+        date->day = timeinfo->tm_mday;
+    } else {
+        // Parse existing date (assuming format: YYYY-MM-DD or DD.MM.YYYY or similar)
+        int day, month, year;
+        if (sscanf(date_str, "%d.%d.%d", &day, &month, &year) == 3) {
+            // DD.MM.YYYY format
+            date->day = day;
+            date->month = month;
+            date->year = year;
+        } else if (sscanf(date_str, "%d-%d-%d", &year, &month, &day) == 3) {
+            // YYYY-MM-DD format
+            date->day = day;
+            date->month = month;
+            date->year = year;
+        } else {
+            // Fallback to today's date if parsing fails
+            time_t now = time(nullptr);
+            struct tm* timeinfo = localtime(&now);
+            date->year = timeinfo->tm_year + 1900;
+            date->month = timeinfo->tm_mon + 1;
+            date->day = timeinfo->tm_mday;
+        }
+    }
+}
+
+// Helper function to format calendar date to string
+static void format_calendar_date_to_string(const lv_calendar_date_t* date, char* buffer, size_t buffer_size) {
+    snprintf(buffer, buffer_size, "%02d.%02d.%04d", date->day, date->month, date->year);
+}
+
+// Event handler for the show calendar button
+void show_calendar_button_event_handler(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_CLICKED) {
+        #if ALARM_DEBUG
+        Serial.println("[CALENDAR] Show calendar button clicked. Initializing calendar.");
+        #endif
+        
+        // Get the current alarm date from the label
+        const char* current_date_str = lv_label_get_text(objects.alarm_date_label);
+        
+        // Parse the current date and set up the calendar
+        lv_calendar_date_t date_to_show;
+        parse_date_string_to_calendar(current_date_str, &date_to_show);
+        
+        // Store the original date for potential restoration on cancel
+        original_calendar_date = date_to_show;
+        has_original_date = (current_date_str && strlen(current_date_str) > 0);
+        
+        // Initialize date selection tracking
+        last_selected_date = date_to_show;
+        has_user_selected_date = false;
+        
+        // Set the calendar to show the correct month/year
+        lv_calendar_set_showed_date(objects.calendar_selector, date_to_show.year, date_to_show.month);
+        
+        // Set today's date (required by LVGL calendar)
+        time_t now = time(nullptr);
+        struct tm* timeinfo = localtime(&now);
+        lv_calendar_set_today_date(objects.calendar_selector, 
+                                   timeinfo->tm_year + 1900, 
+                                   timeinfo->tm_mon + 1, 
+                                   timeinfo->tm_mday);
+        
+        // Highlight the current alarm date (or today if no date set)
+        lv_calendar_set_highlighted_dates(objects.calendar_selector, &date_to_show, 1);
+        
+        #if ALARM_DEBUG
+        Serial.printf("Calendar initialized with date: %02d.%02d.%04d\n", 
+                     date_to_show.day, date_to_show.month, date_to_show.year);
+        #endif
+        
+        // The calendar popup will be shown by EEZ-Flow
+    }
+}
+
+// Event handler for the calendar OK button
+void calendar_ok_button_event_handler(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_CLICKED) {
+        #if ALARM_DEBUG
+        Serial.println("[CALENDAR] Calendar OK button clicked.");
+        #endif
+        
+        // Use the date tracked by our calendar event handler
+        lv_calendar_date_t selected_date = last_selected_date;
+        
+        #if ALARM_DEBUG
+        Serial.printf("[CALENDAR] Selected date: %02d.%02d.%04d (user_selected: %s)\n", 
+                     selected_date.day, selected_date.month, selected_date.year,
+                     has_user_selected_date ? "yes" : "no");
+        #endif
+        
+        // Only update the alarm date if a valid date was selected
+        if (selected_date.year > 0 && selected_date.month > 0 && selected_date.day > 0) {
+            char date_str[16];
+            format_calendar_date_to_string(&selected_date, date_str, sizeof(date_str));
+            
+            // Update the alarm date label
+            lv_label_set_text(objects.alarm_date_label, date_str);
+            
+            #if ALARM_DEBUG
+            Serial.printf("Calendar date selected and saved: %s\n", date_str);
+            #endif
+        } else {
+            #if ALARM_DEBUG
+            Serial.println("No valid date selected in calendar, no changes made.");
+            #endif
+        }
+        
+
+        
+        // The calendar popup will be hidden by EEZ-Flow
+    }
+}
+
+// Event handler for the calendar Cancel button
+void calendar_cancel_button_event_handler(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_CLICKED) {
+        #if ALARM_DEBUG
+        Serial.println("[CALENDAR] Calendar Cancel button clicked. No changes made.");
+        #endif
+        
+        // Restore the original date if there was one
+        if (has_original_date) {
+            lv_calendar_set_highlighted_dates(objects.calendar_selector, &original_calendar_date, 1);
+        }
+        
+
+        
+        // The calendar popup will be hidden by EEZ-Flow
+        // No changes are made to the alarm_date_label
+    }
+}

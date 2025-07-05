@@ -54,3 +54,35 @@ extern "C" void action_eez_edit_alarm_button_handler(lv_event_t *e) {
 extern "C" void action_eez_delete_alarm_button_handler(lv_event_t *e) {
     delete_button_event_handler(e);
 }
+
+/**
+ * @brief Bridge for the show_calendar_button's CLICKED event.
+ *        EEZ-Flow Action Name: eez_show_calendar_button_handler
+ */
+extern "C" void action_eez_show_calendar_button_handler(lv_event_t *e) {
+    show_calendar_button_event_handler(e);
+}
+
+/**
+ * @brief Bridge for the date_selection_ok_button's CLICKED event.
+ *        EEZ-Flow Action Name: eez_calendar_ok_button_handler
+ */
+extern "C" void action_eez_calendar_ok_button_handler(lv_event_t *e) {
+    calendar_ok_button_event_handler(e);
+}
+
+/**
+ * @brief Bridge for the date_selection_cancel_button's CLICKED event.
+ *        EEZ-Flow Action Name: eez_calendar_cancel_button_handler
+ */
+extern "C" void action_eez_calendar_cancel_button_handler(lv_event_t *e) {
+    calendar_cancel_button_event_handler(e);
+}
+
+/**
+ * @brief Bridge for the calendar date selection event handler
+ *        EEZ-Flow Action Name: eez_calendar_date_selected
+ */
+extern "C" void action_eez_calendar_date_selected(lv_event_t *e) {
+    calendar_date_selection_event_handler(e);
+}

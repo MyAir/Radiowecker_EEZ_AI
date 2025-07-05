@@ -44,6 +44,7 @@ typedef struct _objects_t {
     lv_obj_t *show_calendar_button;
     lv_obj_t *save_alarm_button;
     lv_obj_t *cancel_alarm_button;
+    lv_obj_t *calendar_selector;
     lv_obj_t *date_selection_ok_button;
     lv_obj_t *date_selection_cancel_button;
     lv_obj_t *panel_content;
@@ -182,7 +183,6 @@ typedef struct _objects_t {
     lv_obj_t *sunday_checkbox;
     lv_obj_t *alarm_edit_button_panel;
     lv_obj_t *calendar_popup_panel;
-    lv_obj_t *calendar_selector;
 } objects_t;
 
 extern objects_t objects;

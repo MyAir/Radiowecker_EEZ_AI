@@ -15,4 +15,10 @@ void delete_button_event_handler(lv_event_t *e);
 // Event handler for the alarm title text area to manage the keyboard
 void alarm_title_textarea_event_handler(lv_event_t * e);
 
+// Calendar event handlers for date selection
+void show_calendar_button_event_handler(lv_event_t *e);
+void calendar_ok_button_event_handler(lv_event_t *e);
+void calendar_cancel_button_event_handler(lv_event_t *e);
+void calendar_date_selection_event_handler(lv_event_t *e);
+
 #endif // EVENT_HANDLER_H
