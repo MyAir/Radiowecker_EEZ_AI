@@ -14,7 +14,8 @@ UIManager* UIManager::_instance = nullptr;
 // Private constructor implementation
 UIManager::UIManager() {
     sgp30 = new Adafruit_SGP30();
-    sht31 = new Adafruit_SHT31();
+    // Pass the shared I2C bus instance (Wire1) to the SHT31 constructor.
+    sht31 = new Adafruit_SHT31(&Wire1);
     sgp30Initialized = false;
     sht31Initialized = false;
 }
@@ -31,12 +32,11 @@ UIManager* UIManager::getInstance() {
 bool UIManager::initSensors() {
     bool success = true;
     Preferences preferences;
-    
-    // Initialize SHT31 temperature and humidity sensor
-    // We don't need to call Wire.begin() here as it's already initialized in main.cpp
+
+    // Initialize SHT31. The I2C bus is now correctly passed in the constructor.
     if (!sht31->begin(0x44)) {
 #if SENSOR_DEBUG
-        Serial.println("Couldn't find SHT31 sensor!");
+        Serial.println("Couldn't find SHT31 sensor on I2C bus 1!");
 #endif
         success = false;
     } else {
@@ -45,12 +45,11 @@ bool UIManager::initSensors() {
         Serial.println("SHT31 sensor initialized successfully");
 #endif
     }
-    
-    // Initialize SGP30 VOC and eCO2 sensor
-    // Use the Wire instance that was initialized in main.cpp
-    if (!sgp30->begin(&Wire)) {
+
+    // Initialize SGP30 VOC and eCO2 sensor using the shared Wire1 bus.
+    if (!sgp30->begin(&Wire1)) {
 #if SENSOR_DEBUG
-        Serial.println("Couldn't find SGP30 sensor!");
+        Serial.println("Couldn't find SGP30 sensor on I2C bus 1!");
 #endif
         success = false;
     } else {
@@ -64,13 +63,13 @@ bool UIManager::initSensors() {
 #endif
         // Initialize IAQ algorithm baseline
         sgp30->IAQinit();
-        
+
         // Try to load baseline values from non-volatile storage
         preferences.begin("sgp30", false);
         eco2_baseline = preferences.getUInt("eco2_base", 0);
         tvoc_baseline = preferences.getUInt("tvoc_base", 0);
         preferences.end();
-        
+
         // If we have valid baseline values, set them
         if (eco2_baseline > 0 && tvoc_baseline > 0) {
 #if SENSOR_DEBUG
@@ -79,10 +78,10 @@ bool UIManager::initSensors() {
             sgp30->setIAQBaseline(eco2_baseline, tvoc_baseline);
         }
     }
-    
+
     // Initialize the baseline timestamp
     lastBaselineTime = ::millis();
-    
+
     return success;
 }
 
@@ -241,8 +240,7 @@ void UIManager::updateCO2(uint16_t eco2) {
 void UIManager::updateEnvironmentalData() {
     // Only proceed if sensors were initialized successfully
     if (sht31Initialized) {
-        // Check I2C bus status and reinitialize only if needed
-        reinitializeI2CBusIfNeeded();
+        // With a shared, stable I2C bus, the re-initialization patch is no longer needed.
         
         // Read temperature and humidity from SHT31
         float temperature = sht31->readTemperature();
@@ -267,8 +265,7 @@ void UIManager::updateEnvironmentalData() {
     }
     
     if (sgp30Initialized) {
-        // Check I2C bus status and reinitialize only if needed
-        reinitializeI2CBusIfNeeded();
+        // With a shared, stable I2C bus, the re-initialization patch is no longer needed.
         
         // Read TVOC and eCO2 from SGP30
         if (sgp30->IAQmeasure()) {

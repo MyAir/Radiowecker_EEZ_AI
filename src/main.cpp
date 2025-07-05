@@ -1,10 +1,10 @@
 #include <Arduino.h>
-
+#include <Wire.h>
+#include "HardwareConfig.h"  // Include for hardware configuration constants
 #include <lvgl.h>
 #include "lgfx_config.h"
 #include <SD.h>
 #include <SPI.h>
-#include <Wire.h>
 #include <WiFi.h>
 #include <time.h>
 #include <ArduinoJson.h>
@@ -13,7 +13,6 @@
 #include "ConfigManager.h"
 #include "debug_config.h"
 #include <screens.h>  // Include for the objects struct from EEZ Studio UI
-#include "HardwareConfig.h"  // Include for hardware configuration constants
 #include <ArduinoOTA.h>
 #include "OtaManager.h"
 #include "AlarmManager.h"
@@ -33,8 +32,6 @@ void wifiStatusTimerCallback(lv_timer_t *timer);
 void timeUpdateTimerCallback(lv_timer_t *timer);
 void envSensorTimerCallback(lv_timer_t *timer);
 void weatherUpdateTimerCallback(lv_timer_t *timer);
-
-
 
 // LVGL display and input device
 lv_display_t * display = NULL;
@@ -128,6 +125,10 @@ uint32_t my_tick_get_cb(void) {
 
 void setup()
 {
+    // Initialize the shared I2C bus 1 for the touch controller and sensors.
+    // This is done once, here, to ensure all libraries use the same instance.
+    Wire1.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_FREQUENCY);
+
     Serial.begin(115200);
     while(!Serial && millis() < 3000); // Wait up to 3 seconds for Serial
     #if SYSTEM_DEBUG
@@ -257,8 +258,7 @@ void setup()
 #endif
     }
 
-    // Initialize I2C bus for sensors once, before UIManager initialization
-    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_FREQUENCY);  // Using constants from HardwareConfig.h
+    // The shared I2C bus (Wire1) is initialized at the start of setup().
     
     // OTA is initialized in connectToWiFi() after a successful connection
 

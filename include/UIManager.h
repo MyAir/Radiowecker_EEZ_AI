@@ -5,6 +5,7 @@
 #include <lvgl.h>
 #include <Adafruit_SGP30.h>
 #include <Adafruit_SHT31.h>
+#include <Wire.h>
 #include <WiFi.h>
 #include "WeatherService.h"
 
