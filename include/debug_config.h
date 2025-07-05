@@ -67,3 +67,8 @@
 #ifndef ALARM_DEBUG
   #define ALARM_DEBUG 1
 #endif
+
+// Controls debug output for the Alarm Manager
+#ifndef ALARM_UI_DEBUG
+  #define ALARM_UI_DEBUG 1
+#endif

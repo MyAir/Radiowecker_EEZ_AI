@@ -276,9 +276,6 @@ void setup()
     // Now that alarms are loaded (or not), populate the UI list
     am->populateAlarmList();
 
-    #if ALARM_DEBUG
-    Serial.println("Adding event handlers for alarm screen...");
-    #endif
     // All alarm-related event handlers are now managed by EEZ-Flow User Actions for a consistent architecture.
 
     

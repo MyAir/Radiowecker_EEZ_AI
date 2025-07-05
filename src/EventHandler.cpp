@@ -38,7 +38,7 @@ static void populate_alarm_edit_screen() {
     const Alarm* alarm = am->getEditingAlarm();
 
     if (alarm) { // Editing existing alarm
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.printf("Populating edit screen for alarm %d.\n", alarm->id);
         #endif
         // Populate UI fields
@@ -55,7 +55,7 @@ static void populate_alarm_edit_screen() {
         // Manually trigger the VALUE_CHANGED event to ensure the UI (e.g., panels)
         // updates based on the switch's new state. This is necessary because
         // lv_obj_add/clear_state does not fire this event automatically.
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("Manually sending VALUE_CHANGED event to alarm_repeat_switch.");
         #endif
         lv_obj_send_event(objects.alarm_repeat_switch, LV_EVENT_VALUE_CHANGED, NULL);
@@ -71,7 +71,7 @@ static void populate_alarm_edit_screen() {
         lv_label_set_text(objects.alarm_date_label, alarm->date.c_str());
 
     } else { // Adding new alarm
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("Populating edit screen with default values for new alarm.");
         #endif
         // Set to default values
@@ -91,7 +91,7 @@ static void populate_alarm_edit_screen() {
         // Manually trigger the VALUE_CHANGED event to ensure the UI (e.g., panels)
         // updates based on the switch's new state. This is necessary because
         // lv_obj_add/clear_state does not fire this event automatically.
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("Manually sending VALUE_CHANGED event to alarm_repeat_switch for new alarm.");
         #endif
         lv_obj_send_event(objects.alarm_repeat_switch, LV_EVENT_VALUE_CHANGED, NULL);
@@ -103,7 +103,7 @@ void alarm_edit_screen_load_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
 
     if (code == LV_EVENT_SCREEN_LOAD_START) {
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("Alarm edit screen: LOAD_START. Creating keyboard.");
         #endif
         // Create and configure the keyboard for the text area
@@ -111,12 +111,12 @@ void alarm_edit_screen_load_handler(lv_event_t *e) {
         lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_event_cb(objects.alarm_title_textarea, alarm_title_textarea_event_handler, LV_EVENT_ALL, NULL);
     } else if (code == LV_EVENT_SCREEN_LOADED) {
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("Alarm edit screen: LOADED. Populating screen.");
         #endif
         populate_alarm_edit_screen();
     } else if (code == LV_EVENT_SCREEN_UNLOAD_START) {
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("Alarm edit screen: UNLOAD_START. Deleting keyboard.");
         #endif
         if (keyboard) {
@@ -132,7 +132,7 @@ void alarm_edit_screen_load_handler(lv_event_t *e) {
 void save_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("Save button clicked. Saving data...");
         #endif
         AlarmManager* am = AlarmManager::getInstance();
@@ -146,7 +146,7 @@ void save_button_event_handler(lv_event_t *e) {
                 alarm_data.id = current_alarm->id;
             } else {
                 // Error state: in edit mode but no alarm is selected for editing.
-                #if ALARM_DEBUG
+                #if ALARM_UI_DEBUG
                 Serial.println("ERROR: Save clicked in EDIT mode, but no alarm is being edited.");
                 #endif
                 return; // Abort save
@@ -189,7 +189,7 @@ void save_button_event_handler(lv_event_t *e) {
 void add_alarm_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("Add Alarm button clicked. Setting state and populating screen.");
         #endif
         AlarmManager::getInstance()->deselectAlarm(); // Deselect to prevent stray focus events on the next screen
@@ -203,7 +203,7 @@ void add_alarm_button_event_handler(lv_event_t *e) {
 void cancel_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("Cancel button clicked. No action needed.");
         #endif
         // Screen transition is now handled by EEZ-Flow
@@ -219,7 +219,7 @@ void alarm_entry_focus_event_handler(lv_event_t *e) {
         int alarm_id = static_cast<int>(alarm_id_ptr);
         AlarmManager::getInstance()->setSelectedAlarm(alarm_id, target_obj);
 
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.printf("Alarm %d focused.\n", alarm_id);
         #endif
     } else if (code == LV_EVENT_DEFOCUSED) {
@@ -227,7 +227,7 @@ void alarm_entry_focus_event_handler(lv_event_t *e) {
         if (AlarmManager::getInstance()->getSelectedAlarmId() != -1) {
             AlarmManager::getInstance()->deselectAlarm();
 
-            #if ALARM_DEBUG
+            #if ALARM_UI_DEBUG
             Serial.println("Alarm defocused.");
             #endif
         }
@@ -241,7 +241,7 @@ void edit_button_event_handler(lv_event_t *e) {
         AlarmManager* am = AlarmManager::getInstance();
         int alarmId = am->getSelectedAlarmId();
         if (alarmId != -1) {
-            #if ALARM_DEBUG
+            #if ALARM_UI_DEBUG
             Serial.printf("Edit button clicked for alarm %d. Setting state and populating screen.\n", alarmId);
             #endif
             am->deselectAlarm(); // Deselect to prevent stray focus events on the next screen
@@ -249,7 +249,7 @@ void edit_button_event_handler(lv_event_t *e) {
             // The screen transition is initiated by EEZ-Flow.
             // The population will be handled by the LV_EVENT_SCREEN_LOADED event.
         } else {
-            #if ALARM_DEBUG
+            #if ALARM_UI_DEBUG
             Serial.println("Edit button clicked, but no alarm selected.");
             #endif
         }
@@ -260,7 +260,7 @@ void edit_button_event_handler(lv_event_t *e) {
 void delete_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("Delete button clicked.");
         #endif
         AlarmManager::getInstance()->deleteSelectedAlarm();
@@ -287,7 +287,7 @@ void calendar_date_selection_event_handler(lv_event_t *e) {
         // Update the visual highlight on the calendar widget
         lv_calendar_set_highlighted_dates(objects.calendar_selector, &last_selected_date, 1);
         
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.printf("[CALENDAR] Date selected: %02d.%02d.%04d (highlighted)\n", 
                      last_selected_date.day, last_selected_date.month, last_selected_date.year);
         #endif
@@ -336,7 +336,7 @@ static void format_calendar_date_to_string(const lv_calendar_date_t* date, char*
 void show_calendar_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("[CALENDAR] Show calendar button clicked. Initializing calendar.");
         #endif
         
@@ -369,7 +369,7 @@ void show_calendar_button_event_handler(lv_event_t *e) {
         // Highlight the current alarm date (or today if no date set)
         lv_calendar_set_highlighted_dates(objects.calendar_selector, &date_to_show, 1);
         
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.printf("Calendar initialized with date: %02d.%02d.%04d\n", 
                      date_to_show.day, date_to_show.month, date_to_show.year);
         #endif
@@ -382,14 +382,14 @@ void show_calendar_button_event_handler(lv_event_t *e) {
 void calendar_ok_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("[CALENDAR] Calendar OK button clicked.");
         #endif
         
         // Use the date tracked by our calendar event handler
         lv_calendar_date_t selected_date = last_selected_date;
         
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.printf("[CALENDAR] Selected date: %02d.%02d.%04d (user_selected: %s)\n", 
                      selected_date.day, selected_date.month, selected_date.year,
                      has_user_selected_date ? "yes" : "no");
@@ -403,11 +403,11 @@ void calendar_ok_button_event_handler(lv_event_t *e) {
             // Update the alarm date label
             lv_label_set_text(objects.alarm_date_label, date_str);
             
-            #if ALARM_DEBUG
+            #if ALARM_UI_DEBUG
             Serial.printf("Calendar date selected and saved: %s\n", date_str);
             #endif
         } else {
-            #if ALARM_DEBUG
+            #if ALARM_UI_DEBUG
             Serial.println("No valid date selected in calendar, no changes made.");
             #endif
         }
@@ -422,7 +422,7 @@ void calendar_ok_button_event_handler(lv_event_t *e) {
 void calendar_cancel_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
-        #if ALARM_DEBUG
+        #if ALARM_UI_DEBUG
         Serial.println("[CALENDAR] Calendar Cancel button clicked. No changes made.");
         #endif
         

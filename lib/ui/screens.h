@@ -34,7 +34,6 @@ typedef struct _objects_t {
     lv_obj_t *obj3__wifi_quality_label;
     lv_obj_t *content;
     lv_obj_t *back_button;
-    lv_obj_t *obj4;
     lv_obj_t *alarms_menu_button;
     lv_obj_t *alarms_back_button;
     lv_obj_t *add_alarm_button;
