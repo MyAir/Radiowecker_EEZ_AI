@@ -19,6 +19,12 @@ void alarm_title_textarea_event_handler(lv_event_t * e);
 void show_calendar_button_event_handler(lv_event_t *e);
 void calendar_ok_button_event_handler(lv_event_t *e);
 void calendar_cancel_button_event_handler(lv_event_t *e);
-void calendar_date_selection_event_handler(lv_event_t *e);
+void calendar_date_selection_event_handler(lv_event_t * e);
+
+// Radio Page Handlers
+void radio_station_changed_handler(lv_event_t *e);
+void radio_play_button_handler(lv_event_t *e);
+void radio_stop_button_handler(lv_event_t *e);
+void radio_volume_changed_handler(lv_event_t *e);
 
 #endif // EVENT_HANDLER_H

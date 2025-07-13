@@ -17,6 +17,10 @@ extern void action_eez_calendar_ok_button_handler(lv_event_t * e);
 extern void action_eez_calendar_cancel_button_handler(lv_event_t * e);
 extern void action_eez_show_calendar_button_handler(lv_event_t * e);
 extern void action_eez_calendar_date_selected(lv_event_t * e);
+extern void action_eez_radio_play_button_handler(lv_event_t * e);
+extern void action_eez_radio_stop_button_handler(lv_event_t * e);
+extern void action_eez_radio_volume_changed_handler(lv_event_t * e);
+extern void action_eez_radio_station_changed_handler(lv_event_t * e);
 
 
 #ifdef __cplusplus

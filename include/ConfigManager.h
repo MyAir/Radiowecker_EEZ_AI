@@ -38,6 +38,11 @@ public:
     bool getWiFiCredentials(String& ssid, String& password);
     bool getNTPSettings(String& server, String& timezone);
     bool getWeatherSettings(String& apiKey, float& lat, float& lon, String& units, String& lang);
+
+    // Radio specific methods
+    bool loadStations();
+    uint8_t getRadioVolume();
+    void setRadioVolume(uint8_t volume);
     
     // Debug utility
     void printConfig();

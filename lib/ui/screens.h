@@ -12,16 +12,19 @@ typedef struct _objects_t {
     lv_obj_t *menu;
     lv_obj_t *alarms;
     lv_obj_t *alarm_edit_screen;
+    lv_obj_t *radio;
     lv_obj_t *obj0;
     lv_obj_t *obj0__status_bar;
     lv_obj_t *obj0__wifi_label;
     lv_obj_t *obj0__ip_label;
     lv_obj_t *obj0__wifi_quality_label;
     lv_obj_t *obj1;
-    lv_obj_t *obj1__status_bar;
-    lv_obj_t *obj1__wifi_label;
-    lv_obj_t *obj1__ip_label;
-    lv_obj_t *obj1__wifi_quality_label;
+    lv_obj_t *obj1__playback_panel;
+    lv_obj_t *obj1__playback_text_container;
+    lv_obj_t *obj1__alarm_titile;
+    lv_obj_t *obj1__title;
+    lv_obj_t *obj1__album;
+    lv_obj_t *obj1__artist;
     lv_obj_t *obj2;
     lv_obj_t *obj2__status_bar;
     lv_obj_t *obj2__wifi_label;
@@ -32,9 +35,27 @@ typedef struct _objects_t {
     lv_obj_t *obj3__wifi_label;
     lv_obj_t *obj3__ip_label;
     lv_obj_t *obj3__wifi_quality_label;
+    lv_obj_t *obj4;
+    lv_obj_t *obj4__status_bar;
+    lv_obj_t *obj4__wifi_label;
+    lv_obj_t *obj4__ip_label;
+    lv_obj_t *obj4__wifi_quality_label;
+    lv_obj_t *obj5;
+    lv_obj_t *obj5__status_bar;
+    lv_obj_t *obj5__wifi_label;
+    lv_obj_t *obj5__ip_label;
+    lv_obj_t *obj5__wifi_quality_label;
+    lv_obj_t *obj6;
+    lv_obj_t *obj6__playback_panel;
+    lv_obj_t *obj6__playback_text_container;
+    lv_obj_t *obj6__alarm_titile;
+    lv_obj_t *obj6__title;
+    lv_obj_t *obj6__album;
+    lv_obj_t *obj6__artist;
     lv_obj_t *content;
     lv_obj_t *back_button;
     lv_obj_t *alarms_menu_button;
+    lv_obj_t *obj7;
     lv_obj_t *alarms_back_button;
     lv_obj_t *add_alarm_button;
     lv_obj_t *edit_alarm_button;
@@ -46,21 +67,18 @@ typedef struct _objects_t {
     lv_obj_t *calendar_selector;
     lv_obj_t *date_selection_ok_button;
     lv_obj_t *date_selection_cancel_button;
+    lv_obj_t *radio_page_back_button;
+    lv_obj_t *radio_station_list_dropdown;
+    lv_obj_t *radio_volume_slider;
+    lv_obj_t *radio_play_button;
+    lv_obj_t *radio_stop_button;
     lv_obj_t *panel_content;
     lv_obj_t *time_panel;
     lv_obj_t *current_date;
     lv_obj_t *current_time;
     lv_obj_t *alarm_container;
     lv_obj_t *alarm_panel;
-    lv_obj_t *alarm_text_container;
-    lv_obj_t *alarm_titile;
-    lv_obj_t *title;
-    lv_obj_t *album;
-    lv_obj_t *artist;
-    lv_obj_t *alarm_off_container;
-    lv_obj_t *alarm_off;
-    lv_obj_t *album_art_container;
-    lv_obj_t *album_art;
+    lv_obj_t *alarm_off_button;
     lv_obj_t *next_alarm;
     lv_obj_t *sensor_panel;
     lv_obj_t *sensor_title_container;
@@ -182,6 +200,13 @@ typedef struct _objects_t {
     lv_obj_t *sunday_checkbox;
     lv_obj_t *alarm_edit_button_panel;
     lv_obj_t *calendar_popup_panel;
+    lv_obj_t *radio_container;
+    lv_obj_t *radio_page_content_container;
+    lv_obj_t *radio_page_button_panel;
+    lv_obj_t *radio_content_container;
+    lv_obj_t *radio_panel;
+    lv_obj_t *obj8;
+    lv_obj_t *playback_image;
 } objects_t;
 
 extern objects_t objects;
@@ -191,6 +216,7 @@ enum ScreensEnum {
     SCREEN_ID_MENU = 2,
     SCREEN_ID_ALARMS = 3,
     SCREEN_ID_ALARM_EDIT_SCREEN = 4,
+    SCREEN_ID_RADIO = 5,
 };
 
 void create_screen_main();
@@ -205,11 +231,17 @@ void tick_screen_alarms();
 void create_screen_alarm_edit_screen();
 void tick_screen_alarm_edit_screen();
 
+void create_screen_radio();
+void tick_screen_radio();
+
 void create_user_widget_status_bar(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex);
 void tick_user_widget_status_bar(void *flowState, int startWidgetIndex);
 
 void create_user_widget_alarm_entry(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex);
 void tick_user_widget_alarm_entry(void *flowState, int startWidgetIndex);
+
+void create_user_widget_playback_panel(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex);
+void tick_user_widget_playback_panel(void *flowState, int startWidgetIndex);
 
 enum Themes {
     THEME_ID_DARK,
@@ -231,9 +263,10 @@ enum Colors {
     COLOR_ID_ALARM_ENTRY_BACKGROUND_FOCUSED,
     COLOR_ID_BUTTON_RED,
     COLOR_ID_BUTTON_GREEN,
+    COLOR_ID_PLAYBACK_PANEL,
 };
 void change_color_theme(uint32_t themeIndex);
-extern uint32_t theme_colors[2][15];
+extern uint32_t theme_colors[2][16];
 
 void tick_screen_by_id(enum ScreensEnum screenId);
 void tick_screen(int screen_index);

@@ -17,6 +17,8 @@
 #include "OtaManager.h"
 #include "AlarmManager.h"
 #include "EventHandler.h"
+#include "AudioManager.h"
+#include "RadioData.h"
 
 // Forward declarations
 void my_log_cb(lv_log_level_t level, const char *buf);
@@ -51,6 +53,9 @@ UIManager* uiManager = nullptr;
 
 // OtaManager instance
 OtaManager otaManager;
+
+// AudioManager instance
+AudioManager audioManager;
 
 #include <ui.h>
 #include "HardwareConfig.h"
@@ -272,6 +277,34 @@ void setup()
 
     // Initialize AlarmManager. The constructor now handles loading alarms.
     AlarmManager* am = AlarmManager::getInstance();
+
+    // Initialize Audio Manager
+#if AUDIO_DEBUG
+    Serial.println("Initializing Audio Manager...");
+#endif
+    audioManager.begin();
+
+    // Load radio stations from SD card
+#if AUDIO_DEBUG
+    Serial.println("Loading radio stations...");
+#endif
+    ConfigManager* configManager = ConfigManager::getInstance();
+    if (configManager->loadStations()) {
+#if AUDIO_DEBUG
+        Serial.println("Radio stations loaded successfully.");
+#endif
+        // Note: Station list population will be handled by EEZ Studio databinding to StationList
+        // populate_station_list_for_ui(radio_station_list_dropdown);
+    } else {
+#if AUDIO_DEBUG
+        Serial.println("Failed to load radio stations.");
+#endif
+    }
+
+    // Set initial radio volume on the slider
+    int initialVolume = configManager->getRadioVolume();
+    lv_slider_set_value(objects.radio_volume_slider, initialVolume, LV_ANIM_OFF);
+    // Volume value will be displayed via EEZ Studio databinding
 
     // Now that alarms are loaded (or not), populate the UI list
     am->populateAlarmList();

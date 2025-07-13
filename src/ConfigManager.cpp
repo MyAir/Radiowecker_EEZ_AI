@@ -1,4 +1,5 @@
 #include "ConfigManager.h"
+#include "RadioData.h"
 
 // Initialize static instance pointer
 ConfigManager* ConfigManager::instance = nullptr;
@@ -150,6 +151,73 @@ String ConfigManager::getFallbackAudio() {
         return "/alarm.mp3";  // Default fallback
     }
     return configDoc["fallback_audio"].as<String>();
+}
+
+//##################################################################################################
+// Radio Station and Volume Management
+//##################################################################################################
+
+bool ConfigManager::loadStations() {
+    if (!SD.exists("/stations.json")) {
+#if CONFIG_DEBUG
+        Serial.println("Error: stations.json not found on SD card!");
+#endif
+        return false;
+    }
+
+    File stationsFile = SD.open("/stations.json", FILE_READ);
+    if (!stationsFile) {
+#if CONFIG_DEBUG
+        Serial.println("Error: Failed to open stations.json on SD card!");
+#endif
+        return false;
+    }
+
+    DynamicJsonDocument stationsDoc(2048); // Adjust size as needed
+    DeserializationError error = deserializeJson(stationsDoc, stationsFile);
+    stationsFile.close();
+
+    if (error) {
+#if CONFIG_DEBUG
+        Serial.print("Error parsing stations.json: ");
+        Serial.println(error.c_str());
+#endif
+        return false;
+    }
+
+    JsonArray stationsArray = stationsDoc["stations"].as<JsonArray>();
+    if (stationsArray) {
+        g_stations.clear();
+        int id_counter = 0;
+        for (JsonObject stationObj : stationsArray) {
+            Station station;
+            station.id = id_counter++;
+            station.name = stationObj["name"].as<String>();
+            station.url = stationObj["url"].as<String>();
+            station.genre = stationObj["genre"].as<String>(); // Optional
+            g_stations.push_back(station);
+        }
+#if CONFIG_DEBUG
+        Serial.printf("Loaded %d stations from stations.json\n", g_stations.size());
+#endif
+        return true;
+    }
+
+    return false;
+}
+
+uint8_t ConfigManager::getRadioVolume() {
+    if (!configLoaded || !configDoc.containsKey("radio")) {
+        return 100; // Default volume
+    }
+    return configDoc["radio"]["volume"] | 100;
+}
+
+void ConfigManager::setRadioVolume(uint8_t volume) {
+    if (configLoaded) {
+        configDoc["radio"]["volume"] = volume;
+        saveConfig(); // Save config whenever volume changes
+    }
 }
 
 bool ConfigManager::getWiFiCredentials(String& ssid, String& password) {
@@ -373,6 +441,11 @@ bool ConfigManager::parseConfig(DynamicJsonDocument& doc) {
     JsonObject system = configDoc.createNestedObject("system");
     system["hostname"] = doc["system"]["hostname"] | "radiowecker";
     system["ota_password"] = doc["system"]["ota_password"] | "changeme";
+    system["timezone"] = doc["system"]["timezone"] | "Europe/Zurich";
+    
+    // Radio settings
+    JsonObject radio = configDoc.createNestedObject("radio");
+    radio["volume"] = doc["radio"]["volume"] | 100;
     
     // Alarms - Handle empty or missing alarms array
     JsonArray alarms = configDoc.createNestedArray("alarms");

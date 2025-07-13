@@ -437,3 +437,136 @@ void calendar_cancel_button_event_handler(lv_event_t *e) {
         // No changes are made to the alarm_date_label
     }
 }
+
+//##############################################################################
+// Radio Page Event Handlers
+//##############################################################################
+
+#include "AudioManager.h"
+#include "ConfigManager.h"
+#include "RadioData.h"
+
+// External reference to global AudioManager instance
+extern AudioManager audioManager;
+
+/**
+ * @brief Handler for radio station dropdown selection change
+ * @param e LVGL event containing the dropdown selection
+ */
+void radio_station_changed_handler(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_VALUE_CHANGED) {
+#if AUDIO_DEBUG
+        Serial.println("[RADIO] Station selection changed");
+#endif
+        // Note: Station data will be handled via EEZ Studio databinding
+        // The selected station URL will be available through the StationList data source
+        // No direct action needed here as the play button will use the selected station
+    }
+}
+
+/**
+ * @brief Handler for radio play button click
+ * @param e LVGL event
+ */
+void radio_play_button_handler(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_CLICKED) {
+#if AUDIO_DEBUG
+        Serial.println("[RADIO] Play button clicked");
+#endif
+        
+        // Get the selected station from ConfigManager
+        ConfigManager* configManager = ConfigManager::getInstance();
+        if (configManager) {
+            // Get radio stations array
+            JsonArray stations = configManager->getRadioStations();
+            if (!stations.isNull() && stations.size() > 0) {
+                // For now, use the first station. In a full implementation,
+                // this would get the selected station index from the UI dropdown
+                // via EEZ Studio databinding
+                JsonObject station = stations[0];
+                String stationUrl = station["url"].as<String>();
+                String stationName = station["name"].as<String>();
+                
+                if (stationUrl.length() > 0) {
+#if AUDIO_DEBUG
+                    Serial.printf("[RADIO] Starting playback: %s\n", stationName.c_str());
+#endif
+                    // Update PlaybackInfo struct for UI databinding
+                    strncpy(g_playbackInfo.Title, stationName.c_str(), sizeof(g_playbackInfo.Title) - 1);
+                    g_playbackInfo.Title[sizeof(g_playbackInfo.Title) - 1] = '\0';
+                    strncpy(g_playbackInfo.Album, "Web Radio", sizeof(g_playbackInfo.Album) - 1);
+                    g_playbackInfo.Album[sizeof(g_playbackInfo.Album) - 1] = '\0';
+                    strncpy(g_playbackInfo.Artist, "", sizeof(g_playbackInfo.Artist) - 1);
+                    g_playbackInfo.Artist[sizeof(g_playbackInfo.Artist) - 1] = '\0';
+                    strncpy(g_playbackInfo.AlarmTitle, "", sizeof(g_playbackInfo.AlarmTitle) - 1); // Keep blank unless started from alarm
+                    g_playbackInfo.AlarmTitle[sizeof(g_playbackInfo.AlarmTitle) - 1] = '\0';
+                    
+                    // Start audio playback
+                    audioManager.connecttohost(stationUrl.c_str());
+                } else {
+#if AUDIO_DEBUG
+                    Serial.println("[RADIO] Error: Station URL is empty");
+#endif
+                }
+            } else {
+#if AUDIO_DEBUG
+                Serial.println("[RADIO] Error: No stations available");
+#endif
+            }
+        }
+    }
+}
+
+/**
+ * @brief Handler for radio stop button click
+ * @param e LVGL event
+ */
+void radio_stop_button_handler(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_CLICKED) {
+#if AUDIO_DEBUG
+        Serial.println("[RADIO] Stop button clicked");
+#endif
+        
+        // Stop audio playback
+        audioManager.stop();
+        
+        // Clear PlaybackInfo struct
+        strncpy(g_playbackInfo.Title, "", sizeof(g_playbackInfo.Title) - 1);
+        g_playbackInfo.Title[sizeof(g_playbackInfo.Title) - 1] = '\0';
+        strncpy(g_playbackInfo.Album, "", sizeof(g_playbackInfo.Album) - 1);
+        g_playbackInfo.Album[sizeof(g_playbackInfo.Album) - 1] = '\0';
+        strncpy(g_playbackInfo.Artist, "", sizeof(g_playbackInfo.Artist) - 1);
+        g_playbackInfo.Artist[sizeof(g_playbackInfo.Artist) - 1] = '\0';
+        strncpy(g_playbackInfo.AlarmTitle, "", sizeof(g_playbackInfo.AlarmTitle) - 1);
+        g_playbackInfo.AlarmTitle[sizeof(g_playbackInfo.AlarmTitle) - 1] = '\0';
+    }
+}
+
+/**
+ * @brief Handler for radio volume slider change
+ * @param e LVGL event containing the slider value
+ */
+void radio_volume_changed_handler(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* slider = static_cast<lv_obj_t*>(lv_event_get_target(e));
+        int32_t volume = lv_slider_get_value(slider);
+        
+#if AUDIO_DEBUG
+        Serial.printf("[RADIO] Volume changed to: %d%%\n", (int)volume);
+#endif
+        
+        // Set audio volume (0-100 range)
+        audioManager.setVolume(volume);
+        
+        // Save volume to config
+        ConfigManager* configManager = ConfigManager::getInstance();
+        if (configManager) {
+            configManager->setRadioVolume((uint8_t)volume);
+            configManager->saveConfig();
+        }
+    }
+}

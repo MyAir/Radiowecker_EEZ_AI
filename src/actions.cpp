@@ -86,3 +86,35 @@ extern "C" void action_eez_calendar_cancel_button_handler(lv_event_t *e) {
 extern "C" void action_eez_calendar_date_selected(lv_event_t *e) {
     calendar_date_selection_event_handler(e);
 }
+
+/**
+ * @brief Bridge for the radio station dropdown's VALUE_CHANGED event.
+ *        EEZ-Flow Action Name: eez_radio_station_changed_handler
+ */
+extern "C" void action_eez_radio_station_changed_handler(lv_event_t *e) {
+    radio_station_changed_handler(e);
+}
+
+/**
+ * @brief Bridge for the radio play button's CLICKED event.
+ *        EEZ-Flow Action Name: eez_radio_play_button_handler
+ */
+extern "C" void action_eez_radio_play_button_handler(lv_event_t *e) {
+    radio_play_button_handler(e);
+}
+
+/**
+ * @brief Bridge for the radio stop button's CLICKED event.
+ *        EEZ-Flow Action Name: eez_radio_stop_button_handler
+ */
+extern "C" void action_eez_radio_stop_button_handler(lv_event_t *e) {
+    radio_stop_button_handler(e);
+}
+
+/**
+ * @brief Bridge for the radio volume slider's VALUE_CHANGED event.
+ *        EEZ-Flow Action Name: eez_radio_volume_changed_handler
+ */
+extern "C" void action_eez_radio_volume_changed_handler(lv_event_t *e) {
+    radio_volume_changed_handler(e);
+}
