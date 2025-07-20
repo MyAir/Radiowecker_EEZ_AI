@@ -1,4 +1,5 @@
 #include "ConfigManager.h"
+#include "debug_config.h"
 #include "RadioData.h"
 
 // Initialize static instance pointer
@@ -23,7 +24,7 @@ bool ConfigManager::loadConfigFromSD() {
     // Check if config file exists
     if (!SD.exists("/config.json")) {
 #if CONFIG_DEBUG
-        Serial.println("Error: config.json not found on SD card!");
+        DEBUG_PRINTLN("Error: config.json not found on SD card!");
 #endif
         // If config file doesn't exist, create default configuration
         setDefaultConfig();
@@ -31,7 +32,7 @@ bool ConfigManager::loadConfigFromSD() {
         // Try to save the default config
         if (saveConfig()) {
 #if CONFIG_DEBUG
-            Serial.println("Created default config.json on SD card");
+            DEBUG_PRINTLN("Created default config.json on SD card");
 #endif
             configLoaded = true;
             return true;
@@ -40,25 +41,25 @@ bool ConfigManager::loadConfigFromSD() {
     }
     
 #if CONFIG_DEBUG
-    Serial.println("Loading config from SD card...");
+    DEBUG_PRINTLN("Loading config from SD card...");
 #endif
     
     File configFile = SD.open("/config.json", FILE_READ);
     if (!configFile) {
 #if CONFIG_DEBUG
-        Serial.println("Error: Failed to open config.json on SD card!");
+        DEBUG_PRINTLN("Error: Failed to open config.json on SD card!");
 #endif
         return false;
     }
     
     size_t size = configFile.size();
 #if CONFIG_DEBUG
-    Serial.printf("Successfully opened config.json (%u bytes)\n", size);
+    DEBUG_PRINTF("Successfully opened config.json (%u bytes)\n", size);
 #endif
     
     if (size == 0) {
 #if CONFIG_DEBUG
-        Serial.println("Error: config.json is empty!");
+        DEBUG_PRINTLN("Error: config.json is empty!");
 #endif
         configFile.close();
         return false;
@@ -73,8 +74,8 @@ bool ConfigManager::loadConfigFromSD() {
     
     if (error) {
 #if CONFIG_DEBUG
-        Serial.print("Error parsing JSON: ");
-        Serial.println(error.c_str());
+        DEBUG_PRINT("Error parsing JSON: ");
+        DEBUG_PRINTLN(error.c_str());
 #endif
         return false;
     }
@@ -82,14 +83,14 @@ bool ConfigManager::loadConfigFromSD() {
     // Parse the config with defaults for missing elements
     if (!parseConfig(tempDoc)) {
 #if CONFIG_DEBUG
-        Serial.println("Error parsing configuration values");
+        DEBUG_PRINTLN("Error parsing configuration values");
 #endif
         return false;
     }
     
 #if CONFIG_DEBUG
     // For debug, print the parsed JSON document
-    Serial.println("Parsed JSON document:");
+    DEBUG_PRINTLN("Parsed JSON document:");
     serializeJsonPretty(configDoc, Serial);
 #endif
     
@@ -160,7 +161,7 @@ String ConfigManager::getFallbackAudio() {
 bool ConfigManager::loadStations() {
     if (!SD.exists("/stations.json")) {
 #if CONFIG_DEBUG
-        Serial.println("Error: stations.json not found on SD card!");
+        DEBUG_PRINTLN("Error: stations.json not found on SD card!");
 #endif
         return false;
     }
@@ -168,7 +169,7 @@ bool ConfigManager::loadStations() {
     File stationsFile = SD.open("/stations.json", FILE_READ);
     if (!stationsFile) {
 #if CONFIG_DEBUG
-        Serial.println("Error: Failed to open stations.json on SD card!");
+        DEBUG_PRINTLN("Error: Failed to open stations.json on SD card!");
 #endif
         return false;
     }
@@ -179,8 +180,8 @@ bool ConfigManager::loadStations() {
 
     if (error) {
 #if CONFIG_DEBUG
-        Serial.print("Error parsing stations.json: ");
-        Serial.println(error.c_str());
+        DEBUG_PRINT("Error parsing stations.json: ");
+        DEBUG_PRINTLN(error.c_str());
 #endif
         return false;
     }
@@ -198,7 +199,7 @@ bool ConfigManager::loadStations() {
             g_stations.push_back(station);
         }
 #if CONFIG_DEBUG
-        Serial.printf("Loaded %d stations from stations.json\n", g_stations.size());
+        DEBUG_PRINTF("Loaded %d stations from stations.json\n", g_stations.size());
 #endif
         return true;
     }
@@ -263,14 +264,14 @@ bool ConfigManager::getWeatherSettings(String& apiKey, float& lat, float& lon, S
 
 bool ConfigManager::saveConfig() {
 #if CONFIG_DEBUG
-    Serial.println("Saving config to SD card...");
+    DEBUG_PRINTLN("Saving config to SD card...");
 #endif
     
     // Try to open config file for writing
     File configFile = SD.open("/config.json", FILE_WRITE);
     if (!configFile) {
 #if CONFIG_DEBUG
-        Serial.println("Error: Failed to open config.json for writing!");
+        DEBUG_PRINTLN("Error: Failed to open config.json for writing!");
 #endif
         return false;
     }
@@ -278,7 +279,7 @@ bool ConfigManager::saveConfig() {
     // Serialize JSON to file
     if (serializeJson(configDoc, configFile) == 0) {
 #if CONFIG_DEBUG
-        Serial.println("Error: Failed to write JSON to config file!");
+        DEBUG_PRINTLN("Error: Failed to write JSON to config file!");
 #endif
         configFile.close();
         return false;
@@ -286,14 +287,14 @@ bool ConfigManager::saveConfig() {
     
     configFile.close();
 #if CONFIG_DEBUG
-    Serial.println("Config saved successfully");
+    DEBUG_PRINTLN("Config saved successfully");
 #endif
     return true;
 }
 
 void ConfigManager::setDefaultConfig() {
 #if CONFIG_DEBUG
-    Serial.println("Creating default configuration...");
+    DEBUG_PRINTLN("Creating default configuration...");
 #endif
     
     // Create a new empty JSON document to replace any existing config
@@ -368,7 +369,7 @@ void ConfigManager::setDefaultConfig() {
 
 bool ConfigManager::parseConfig(DynamicJsonDocument& doc) {
 #if CONFIG_DEBUG
-    Serial.println("Parsing configuration with default values...");
+    DEBUG_PRINTLN("Parsing configuration with default values...");
 #endif
     
     // Create a new document for our complete config
@@ -541,11 +542,11 @@ bool ConfigManager::parseConfig(DynamicJsonDocument& doc) {
 void ConfigManager::printConfig() {
 #if CONFIG_DEBUG
     if (configLoaded) {
-        Serial.println("Current configuration:");
+        DEBUG_PRINTLN("Current configuration:");
         serializeJsonPretty(configDoc, Serial);
-        Serial.println();
+        DEBUG_PRINTLN();
     } else {
-        Serial.println("No configuration loaded");
+        DEBUG_PRINTLN("No configuration loaded");
     }
 #endif
 }

@@ -59,6 +59,7 @@ AudioManager audioManager;
 
 #include <ui.h>
 #include "HardwareConfig.h"
+#include "RadioData.h"
 
 // Forward declare SD card filesystem driver functions for LVGL
 static void * fs_open(lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode);
@@ -81,14 +82,12 @@ static LGFX gfx;
 void my_log_cb(lv_log_level_t level, const char *buf)
 {
     (void)level;  // Unused parameter
-    if (Serial) {
-        Serial.print("[LVGL] ");
-        Serial.print(buf);
-        if (buf[strlen(buf)-1] != '\n') {
-            Serial.println();
-        }
-        Serial.flush();
+    DEBUG_PRINT("[LVGL] ");
+    DEBUG_PRINT(buf);
+    if (buf[strlen(buf)-1] != '\n') {
+        DEBUG_PRINTLN();
     }
+    Serial.flush();
 }
 #endif
 
@@ -134,39 +133,42 @@ void setup()
     // This is done once, here, to ensure all libraries use the same instance.
     Wire1.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_FREQUENCY);
 
-    Serial.begin(115200);
-    while(!Serial && millis() < 3000); // Wait up to 3 seconds for Serial
+    Serial.begin(115200);   // USB CDC port
+    Serial0.begin(115200);  // UART bridge (CP210x) port
+    
+    // Wait for both serial ports to be ready
+    while(!Serial && millis() < 3000); // Wait up to 3 seconds for Serial (USB CDC)
+    
+    // Give Serial0 (UART bridge) time to initialize
+    delay(100); // Brief delay to ensure Serial0 is ready
+    
     #if SYSTEM_DEBUG
     delay(5000);
     #endif
-    if (Serial) {
-        Serial.println("=====================================");
-        Serial.println("   RadioWecker SLS AI - Starting    ");
-        Serial.println("=====================================");
+    
+    // Ensure both serial ports are available before proceeding
+    DEBUG_PRINTLN("=====================================");
+    DEBUG_PRINTLN("   RadioWecker SLS AI - Starting    ");
+    DEBUG_PRINTLN("=====================================");
 
 #if SYSTEM_DEBUG
     if (psramFound()) {
-        Serial.printf("PSRAM found and initialized. Total size: %u bytes, Free: %u bytes\n", ESP.getPsramSize(), ESP.getFreePsram());
+        DEBUG_PRINTF("PSRAM found and initialized. Total size: %u bytes, Free: %u bytes\n", ESP.getPsramSize(), ESP.getFreePsram());
     } else {
-        Serial.println("No PSRAM found or PSRAM failed to initialize.");
+        DEBUG_PRINTLN("No PSRAM found or PSRAM failed to initialize.");
     }
 #endif
         Serial.flush();
-    }
 
     // Initialize display
-    if (Serial) Serial.println("Initializing Display...");
+    DEBUG_PRINTLN("Initializing Display...");
     if (!gfx.init())
     {
-        if (Serial) {
-            Serial.println("ERROR: gfx.init() failed!");
-        }
+        DEBUG_PRINTLN("ERROR: gfx.init() failed!");
     }
     else
     {
-        if (Serial) {
-            Serial.printf("Display initialized: %dx%d\n", gfx.width(), gfx.height());
-        }
+        DEBUG_PRINTF("Display initialized: %dx%d\n", gfx.width(), gfx.height());
         
         // LVGL will handle byte swapping via LV_COLOR_16_SWAP, so no need for LovyanGFX to do it.
 
@@ -175,16 +177,14 @@ void setup()
     }
     
     // Print LVGL version
-    if (Serial) {
-        Serial.printf("LVGL Version: %d.%d.%d\n", LVGL_VERSION_MAJOR, LVGL_VERSION_MINOR, LVGL_VERSION_PATCH);
-    }
+    DEBUG_PRINTF("LVGL Version: %d.%d.%d\n", LVGL_VERSION_MAJOR, LVGL_VERSION_MINOR, LVGL_VERSION_PATCH);
     
-    Serial.println("Initializing LVGL...");
+    DEBUG_PRINTLN("Initializing LVGL...");
     lv_init();
     // Initialize LVGL tick callback with proper signature for LVGL 9.x
     lv_tick_set_cb(my_tick_get_cb);
 
-    Serial.println("LVGL initialized");
+    DEBUG_PRINTLN("LVGL initialized");
 
     // Create a display driver
     display = lv_display_create(screenWidth, screenHeight);
@@ -192,16 +192,16 @@ void setup()
 
     // Use PARTIAL_MODE with two buffers in PSRAM.
     // This is a robust and flicker-free approach when driver-level double buffering is not available or configured.
-    if (Serial) Serial.println("Allocating LVGL draw buffers in PSRAM for PARTIAL_MODE.");
+    DEBUG_PRINTLN("Allocating LVGL draw buffers in PSRAM for PARTIAL_MODE.");
     uint32_t buf_size = screenWidth * 100 * sizeof(lv_color_t); // 100 lines buffer
     void *ps_buf1 = ps_malloc(buf_size);
     void *ps_buf2 = ps_malloc(buf_size);
 
     if (ps_buf1 && ps_buf2) {
         lv_display_set_buffers(display, ps_buf1, ps_buf2, buf_size, LV_DISPLAY_RENDER_MODE_PARTIAL);
-        if (Serial) Serial.println("LVGL configured for PARTIAL_MODE with PSRAM buffers.");
+        DEBUG_PRINTLN("LVGL configured for PARTIAL_MODE with PSRAM buffers.");
     } else {
-        if (Serial) Serial.println("PSRAM allocation failed. Using smaller internal RAM buffers as a fallback.");
+        DEBUG_PRINTLN("PSRAM allocation failed. Using smaller internal RAM buffers as a fallback.");
         // Fallback to smaller internal RAM buffers if PSRAM allocation fails
         static lv_color_t int_buf1[screenWidth * 10];
         static lv_color_t int_buf2[screenWidth * 10];
@@ -211,9 +211,7 @@ void setup()
     // Initialize touch
     touch_indev = lv_indev_create();
     if (!touch_indev) {
-        if (Serial) {
-            Serial.println("ERROR: Failed to create LVGL input device!");
-        }
+        DEBUG_PRINTLN("ERROR: Failed to create LVGL input device!");
     } else {
         lv_indev_set_type(touch_indev, LV_INDEV_TYPE_POINTER);
         lv_indev_set_read_cb(touch_indev, my_touchpad_read);
@@ -222,7 +220,7 @@ void setup()
         if (display) {
             lv_indev_set_display(touch_indev, display);
         } else {
-            Serial.println("WARNING: Display not available for touch input device");
+            DEBUG_PRINTLN("WARNING: Display not available for touch input device");
         }
         
         // Enable the input device
@@ -230,12 +228,12 @@ void setup()
     }
 
     // Initialize SD Card
-    Serial.println("Initializing SD card...");
+    DEBUG_PRINTLN("Initializing SD card...");
     SPI.begin(SD_SCK, SD_MISO, SD_MOSI);
     if (!SD.begin(SD_CS)) {
-        Serial.println("SD Card initialization failed!");
+        DEBUG_PRINTLN("SD Card initialization failed!");
     } else {
-        Serial.println("SD Card initialization successful!");
+        DEBUG_PRINTLN("SD Card initialization successful!");
         
         // Initialize LVGL filesystem driver for SD card
         static lv_fs_drv_t fs_drv;
@@ -253,12 +251,12 @@ void setup()
 
         // Register the driver
         lv_fs_drv_register(&fs_drv);
-        Serial.printf("LVGL filesystem driver registered with letter '%c:'", DRIVE_LETTER);
-        Serial.println();
+        DEBUG_PRINTF("LVGL filesystem driver registered with letter '%c:'", DRIVE_LETTER);
+        DEBUG_PRINTLN();
         
 #if SD_DEBUG
         // List files on SD card
-        Serial.println("Files on SD Card:");
+        DEBUG_PRINTLN("Files on SD Card:");
         listDirectory(SD, "/", 0);
 #endif
     }
@@ -280,24 +278,24 @@ void setup()
 
     // Initialize Audio Manager
 #if AUDIO_DEBUG
-    Serial.println("Initializing Audio Manager...");
+    DEBUG_PRINTLN("Initializing Audio Manager...");
 #endif
     audioManager.begin();
 
     // Load radio stations from SD card
 #if AUDIO_DEBUG
-    Serial.println("Loading radio stations...");
+    DEBUG_PRINTLN("Loading radio stations...");
 #endif
     ConfigManager* configManager = ConfigManager::getInstance();
     if (configManager->loadStations()) {
 #if AUDIO_DEBUG
-        Serial.println("Radio stations loaded successfully.");
+        DEBUG_PRINTLN("Radio stations loaded successfully.");
 #endif
-        // Note: Station list population will be handled by EEZ Studio databinding to StationList
-        // populate_station_list_for_ui(radio_station_list_dropdown);
+        // Populate the station dropdown with loaded stations
+        populate_station_list_for_ui(objects.radio_station_list_dropdown);
     } else {
 #if AUDIO_DEBUG
-        Serial.println("Failed to load radio stations.");
+        DEBUG_PRINTLN("Failed to load radio stations.");
 #endif
     }
 
@@ -316,14 +314,14 @@ void setup()
     uiManager = UIManager::getInstance();
     if (uiManager->initSensors()) {
 #if SENSOR_DEBUG
-        Serial.println("Environmental sensors initialized successfully");
+        DEBUG_PRINTLN("Environmental sensors initialized successfully");
 #endif
     } else {
 #if SENSOR_DEBUG
-        Serial.println("Failed to initialize one or more environmental sensors");
+        DEBUG_PRINTLN("Failed to initialize one or more environmental sensors");
 #endif
     }
-    Serial.println("UI initialized");
+    DEBUG_PRINTLN("UI initialized");
     
     // Now that UI is initialized, connect to WiFi using credentials from config.json
     connectToWiFi();
@@ -331,14 +329,14 @@ void setup()
     // Start periodic tasks (WiFi status updates, etc.)
     startPeriodicTasks();
 
-    Serial.println("Setup done");
+    DEBUG_PRINTLN("Setup done");
 }
 
 
 
 void connectToWiFi() {
 #if WIFI_DEBUG
-    Serial.println("Reading WiFi credentials from config...");
+    DEBUG_PRINTLN("Reading WiFi credentials from config...");
 #endif
     
     ConfigManager* configManager = ConfigManager::getInstance();
@@ -347,7 +345,7 @@ void connectToWiFi() {
     if (!configManager->isConfigLoaded()) {
         if (!configManager->initConfig()) {
 #if CONFIG_DEBUG
-            Serial.println("Error: Failed to initialize configuration manager");
+            DEBUG_PRINTLN("Error: Failed to initialize configuration manager");
 #endif
             return;
         }
@@ -357,14 +355,14 @@ void connectToWiFi() {
     String wifiSSID, wifiPassword;
     if (!configManager->getWiFiCredentials(wifiSSID, wifiPassword)) {
 #if CONFIG_DEBUG
-        Serial.println("Error: WiFi credentials not found or incomplete!");
+        DEBUG_PRINTLN("Error: WiFi credentials not found or incomplete!");
 #endif
         return;
     }
     
     // Connect to WiFi
 #if WIFI_DEBUG
-    Serial.printf("Connecting to WiFi SSID: %s\n", wifiSSID.c_str());
+    DEBUG_PRINTF("Connecting to WiFi SSID: %s\n", wifiSSID.c_str());
 #endif
     
     WiFi.begin(wifiSSID.c_str(), wifiPassword.c_str());
@@ -373,20 +371,20 @@ void connectToWiFi() {
     while (WiFi.status() != WL_CONNECTED && timeout < 20) {
         delay(500);
 #if WIFI_DEBUG
-        Serial.print(".");
+        DEBUG_PRINT(".");
 #endif
         timeout++;
     }
     
     if (WiFi.status() != WL_CONNECTED) {
 #if WIFI_DEBUG
-        Serial.println("\nFailed to connect to WiFi!");
+        DEBUG_PRINTLN("\nFailed to connect to WiFi!");
 #endif
         return;
     }
     
 #if WIFI_DEBUG
-    Serial.println("\nWiFi connected! IP address: " + WiFi.localIP().toString());
+    DEBUG_PRINTLN("\nWiFi connected! IP address: " + WiFi.localIP().toString());
 #endif
     
     // After connecting to WiFi, initialize OTA
@@ -395,7 +393,7 @@ void connectToWiFi() {
     // Check if UIManager is initialized before initializing weather
     if (!uiManager) {
 #if CONFIG_DEBUG
-        Serial.println("Error: UIManager not initialized!");
+        DEBUG_PRINTLN("Error: UIManager not initialized!");
 #endif
         return;
     }
@@ -414,26 +412,26 @@ void initializeWeatherService() {
     
     if (!configManager->getWeatherSettings(apiKey, latitude, longitude, units, language)) {
 #if WEATHER_DEBUG
-        Serial.println("No weather configuration found or configuration is incomplete");
+        DEBUG_PRINTLN("No weather configuration found or configuration is incomplete");
 #endif
         return;
     }
     
 #if WEATHER_DEBUG
-    Serial.println("Weather configuration found, initializing service...");
-    Serial.printf("API Key: [%s]\n", apiKey.length() > 0 ? apiKey.c_str() : "EMPTY");
-    Serial.printf("Location: [%.6f, %.6f]\n", latitude, longitude);
-    Serial.printf("Units: [%s], Language: [%s]\n", units.c_str(), language.c_str());
+    DEBUG_PRINTLN("Weather configuration found, initializing service...");
+    DEBUG_PRINTF("API Key: [%s]\n", apiKey.length() > 0 ? apiKey.c_str() : "EMPTY");
+    DEBUG_PRINTF("Location: [%.6f, %.6f]\n", latitude, longitude);
+    DEBUG_PRINTF("Units: [%s], Language: [%s]\n", units.c_str(), language.c_str());
 #endif
     
     // Initialize weather service
     if (uiManager->initWeatherService(apiKey, latitude, longitude, units, language)) {
 #if WEATHER_DEBUG
-        Serial.println("WeatherService initialized successfully");
+        DEBUG_PRINTLN("WeatherService initialized successfully");
 #endif
     } else {
 #if WEATHER_DEBUG
-        Serial.println("Failed to initialize WeatherService");
+        DEBUG_PRINTLN("Failed to initialize WeatherService");
 #endif
     }
 }
@@ -441,7 +439,7 @@ void initializeWeatherService() {
 // NTP time synchronization function
 void syncTimeFromNTP() {
 #if TIME_DEBUG
-    Serial.println("Synchronizing time from NTP...");
+    DEBUG_PRINTLN("Synchronizing time from NTP...");
 #endif
     
     ConfigManager* configManager = ConfigManager::getInstance();
@@ -451,10 +449,10 @@ void syncTimeFromNTP() {
     configManager->getNTPSettings(ntpServer, timezone);
     
 #if TIME_DEBUG
-    Serial.print("NTP Server: ");
-    Serial.println(ntpServer);
-    Serial.print("Timezone: ");
-    Serial.println(timezone);
+    DEBUG_PRINT("NTP Server: ");
+    DEBUG_PRINTLN(ntpServer);
+    DEBUG_PRINT("Timezone: ");
+    DEBUG_PRINTLN(timezone);
 #endif
     
     // Configure time with NTP server and timezone
@@ -466,12 +464,12 @@ void syncTimeFromNTP() {
     const int maxRetries = 10;
     
 #if TIME_DEBUG
-    Serial.println("Waiting for NTP synchronization");
+    DEBUG_PRINTLN("Waiting for NTP synchronization");
 #endif
 
     while (!getLocalTime(&timeinfo) && retry < maxRetries) {
 #if TIME_DEBUG
-        Serial.print(".");
+        DEBUG_PRINT(".");
 #endif
         delay(1000);
         retry++;
@@ -479,19 +477,19 @@ void syncTimeFromNTP() {
     
     if (retry < maxRetries) {
 #if TIME_DEBUG
-        Serial.println();
-        Serial.println("Time synchronized!");
+        DEBUG_PRINTLN();
+        DEBUG_PRINTLN("Time synchronized!");
         
         // Display the current time
         char timeStr[64];
         strftime(timeStr, sizeof(timeStr), "%A, %B %d %Y %H:%M:%S", &timeinfo);
-        Serial.print("Current time: ");
-        Serial.println(timeStr);
+        DEBUG_PRINT("Current time: ");
+        DEBUG_PRINTLN(timeStr);
 #endif
     } else {
 #if TIME_DEBUG
-        Serial.println();
-        Serial.println("Failed to synchronize time!");
+        DEBUG_PRINTLN();
+        DEBUG_PRINTLN("Failed to synchronize time!");
 #endif
     }
 }
@@ -676,12 +674,15 @@ void loop()
     lv_timer_handler();
     ui_tick();
     
+    // Process audio pipeline
+    audioManager.loop();
+    
     // Force reinitialize touch if needed (only on first run)
     if (first_run) {
         // If touch is not initialized properly after 3 seconds, try to reinitialize
         if (now > 3000) {
 #if TOUCH_DEBUG
-            Serial.println("\n===== TOUCH AVAILABLE THROUGH LOVYANGFX =====\n");
+            DEBUG_PRINTLN("\n===== TOUCH AVAILABLE THROUGH LOVYANGFX =====\n");
 #endif
         }
         // After 5 seconds, consider first run complete
@@ -692,27 +693,25 @@ void loop()
     
     // Periodically print debug info
     if (now - last_print > 1000) {  // Every second
-        if (Serial) {
-#if SYSTEM_DEBUG
-            // System debug info
-            Serial.printf("Free heap: %d bytes\n", (int)ESP.getFreeHeap());
+#if HEAP_DEBUG
+        // System debug info
+        // DEBUG_PRINTF("Free heap: %d bytes\n", (int)ESP.getFreeHeap());
 #endif
-            
+        
 #if TOUCH_DEBUG
-            // Only print touch debug info if TOUCH_DEBUG is enabled
-            Serial.println("Touch device is available through LovyanGFX");
-            // Try to read touch to keep it active
-            uint16_t touchX, touchY;
-            bool touched = gfx.getTouch(&touchX, &touchY);
-            if (touched) {
-                Serial.printf("Touch active at X: %d, Y: %d\n", touchX, touchY);
-            }
-#else
-            // If not in debug mode, just silently keep touch active
-            uint16_t touchX, touchY;
-            gfx.getTouch(&touchX, &touchY);
-#endif
+        // Only print touch debug info if TOUCH_DEBUG is enabled
+        DEBUG_PRINTLN("Touch device is available through LovyanGFX");
+        // Try to read touch to keep it active
+        uint16_t touchX, touchY;
+        bool touched = gfx.getTouch(&touchX, &touchY);
+        if (touched) {
+            DEBUG_PRINTF("Touch active at X: %d, Y: %d\n", touchX, touchY);
         }
+#else
+        // If not in debug mode, just silently keep touch active
+        uint16_t touchX, touchY;
+        gfx.getTouch(&touchX, &touchY);
+#endif
         last_print = now;
     }
     

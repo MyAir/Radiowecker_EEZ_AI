@@ -38,7 +38,7 @@ inline bool reinitializeI2CBusIfNeeded() {
     // If there's an error (anything but 0=success or 2=address NACK which is expected for addr 0)
     if (error != 0 && error != 2) {
 #ifdef SENSOR_DEBUG
-        Serial.printf("I2C bus error detected (code %d), reinitializing...\n", error);
+        DEBUG_PRINTF("I2C bus error detected (code %d), reinitializing...\n", error);
 #endif
         initializeI2CBus();
         return true;

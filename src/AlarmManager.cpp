@@ -22,7 +22,7 @@ AlarmManager* AlarmManager::getInstance() {
 // Private constructor
 AlarmManager::AlarmManager() : m_editMode(AlarmEditMode::NONE), m_editingAlarmId(-1), m_selectedAlarmId(-1), m_selectedAlarmObj(nullptr) {
     if (!SD.begin(SD_CS)) {
-        Serial.println("Card Mount Failed");
+        DEBUG_PRINTLN("Card Mount Failed");
         return;
     }
     loadAlarms();
@@ -37,7 +37,7 @@ void AlarmManager::loadAlarms() {
     File file = SD.open("/alarms.json", FILE_READ);
     if (!file) {
 #if ALARM_DEBUG
-        Serial.println("Error: Failed to open alarms.json for reading");
+        DEBUG_PRINTLN("Error: Failed to open alarms.json for reading");
 #endif
         return;
     }
@@ -48,8 +48,8 @@ void AlarmManager::loadAlarms() {
 
     if (error) {
 #if ALARM_DEBUG
-        Serial.print("Error: Failed to parse alarms.json: ");
-        Serial.println(error.c_str());
+        DEBUG_PRINT("Error: Failed to parse alarms.json: ");
+        DEBUG_PRINTLN(error.c_str());
 #endif
         return;
     }
@@ -57,7 +57,7 @@ void AlarmManager::loadAlarms() {
     JsonArray array = doc.as<JsonArray>();
     if (array.isNull()) {
 #if ALARM_DEBUG
-        Serial.println("Error: alarms.json is not a valid JSON array.");
+        DEBUG_PRINTLN("Error: alarms.json is not a valid JSON array.");
 #endif
         return;
     }
@@ -86,7 +86,7 @@ void AlarmManager::loadAlarms() {
     }
 
 #if ALARM_DEBUG
-    Serial.printf("Successfully loaded %d alarms from alarms.json\n", m_alarms.size());
+    DEBUG_PRINTF("Successfully loaded %d alarms from alarms.json\n", m_alarms.size());
 #endif
 }
 
@@ -98,7 +98,7 @@ bool AlarmManager::saveAlarms() {
     File file = SD.open("/alarms.json", FILE_WRITE);
     if (!file) {
 #if ALARM_DEBUG
-        Serial.println("Error: Failed to open alarms.json for writing");
+        DEBUG_PRINTLN("Error: Failed to open alarms.json for writing");
 #endif
         return false;
     }
@@ -124,7 +124,7 @@ bool AlarmManager::saveAlarms() {
 
     if (serializeJson(doc, file) == 0) {
 #if ALARM_DEBUG
-        Serial.println("Error: Failed to write to alarms.json");
+        DEBUG_PRINTLN("Error: Failed to write to alarms.json");
 #endif
         file.close();
         return false;
@@ -132,7 +132,7 @@ bool AlarmManager::saveAlarms() {
 
     file.close();
 #if ALARM_DEBUG
-    Serial.println("Successfully saved alarms to alarms.json");
+    DEBUG_PRINTLN("Successfully saved alarms to alarms.json");
 #endif
     return true;
 }
@@ -185,11 +185,11 @@ void AlarmManager::deleteAlarm(int alarmId) {
         m_alarms.erase(it, m_alarms.end());
         saveAlarms();
         #if ALARM_DEBUG
-        Serial.printf("Alarm with ID %d deleted.\n", alarmId);
+        DEBUG_PRINTF("Alarm with ID %d deleted.\n", alarmId);
         #endif
     } else {
         #if ALARM_DEBUG
-        Serial.printf("Alarm with ID %d not found for deletion.\n", alarmId);
+        DEBUG_PRINTF("Alarm with ID %d not found for deletion.\n", alarmId);
         #endif
     }
 }
@@ -208,13 +208,13 @@ int AlarmManager::getNextAlarmId() {
 
 void AlarmManager::populateAlarmList() {
     #if ALARM_DEBUG
-    Serial.println("Populating alarm list UI...");
+    DEBUG_PRINTLN("Populating alarm list UI...");
     #endif
 
     lv_obj_t* panel = get_alarms_panel_obj();
     if (!panel) {
         #if ALARM_DEBUG
-        Serial.println("Error: alarms_panel object not found!");
+        DEBUG_PRINTLN("Error: alarms_panel object not found!");
         #endif
         return;
     }
@@ -267,7 +267,7 @@ void AlarmManager::populateAlarmList() {
     }
 
     #if ALARM_DEBUG
-    Serial.printf("Successfully populated %d alarm entries.\n", m_alarms.size());
+    DEBUG_PRINTF("Successfully populated %d alarm entries.\n", m_alarms.size());
     #endif
 }
 
@@ -299,7 +299,7 @@ int AlarmManager::getSelectedAlarmId() const {
 void AlarmManager::deleteSelectedAlarm() {
     if (m_selectedAlarmId != -1) {
         #if ALARM_DEBUG
-        Serial.printf("Deleting alarm %d.\n", m_selectedAlarmId);
+        DEBUG_PRINTF("Deleting alarm %d.\n", m_selectedAlarmId);
         #endif
         deleteAlarm(m_selectedAlarmId);
         populateAlarmList();

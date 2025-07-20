@@ -1,6 +1,7 @@
 #include "OtaManager.h"
 #include <ArduinoOTA.h>
 #include <WiFi.h>
+#include "debug_config.h"
 
 OtaManager::OtaManager() : ota_screen(NULL), ota_label(NULL), ota_progress_bar(NULL) {}
 
@@ -55,11 +56,9 @@ void OtaManager::begin() {
 
     ArduinoOTA.begin();
 
-    if (Serial) {
-        Serial.println("OTA Initialized");
-        Serial.print("IP address: ");
-        Serial.println(WiFi.localIP());
-    }
+    DEBUG_PRINTLN("OTA Initialized");
+    DEBUG_PRINT("IP address: ");
+    DEBUG_PRINTLN(WiFi.localIP());
 }
 
 void OtaManager::create_ota_screen() {

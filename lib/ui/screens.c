@@ -2937,7 +2937,7 @@ void create_screen_radio() {
                                             objects.radio_station_list_dropdown = obj;
                                             lv_obj_set_pos(obj, 0, 0);
                                             lv_obj_set_size(obj, LV_PCT(100), LV_SIZE_CONTENT);
-                                            lv_dropdown_set_options(obj, "");
+                                            lv_dropdown_set_options(obj, "SRF 1\nSRF 2\nSRF 3");
                                             lv_dropdown_set_selected(obj, 0);
                                             lv_obj_add_event_cb(obj, event_handler_cb_radio_radio_station_list_dropdown, LV_EVENT_ALL, flowState);
                                         }
@@ -3085,15 +3085,6 @@ void tick_screen_radio() {
     void *flowState = getFlowState(0, 4);
     (void)flowState;
     tick_user_widget_status_bar(getFlowState(flowState, 2), 33);
-    {
-        const char *new_val = evalStringArrayPropertyAndJoin(flowState, 10, 3, "Failed to evaluate Options in Dropdown widget", "\n");
-        const char *cur_val = lv_dropdown_get_options(objects.radio_station_list_dropdown);
-        if (strcmp(new_val, cur_val) != 0) {
-            tick_value_change_obj = objects.radio_station_list_dropdown;
-            lv_dropdown_set_options(objects.radio_station_list_dropdown, new_val);
-            tick_value_change_obj = NULL;
-        }
-    }
     tick_user_widget_playback_panel(getFlowState(flowState, 12), 38);
 }
 

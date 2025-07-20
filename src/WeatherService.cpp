@@ -6,6 +6,7 @@
 #include <vars.h>     // Include for EEZ global variable enums
 #include <eez-flow.h> // Include for EEZ flow framework
 #include <structs.h>  // Include for WeatherValue struct
+#include "debug_config.h"
 
 // Forward declaration for getIconForCode method
 const void* getIconForCode(const String& iconCode);
@@ -21,8 +22,8 @@ bool WeatherService::init(const String& apiKey, float latitude, float longitude,
     // Validate parameters
     if (apiKey.isEmpty() || latitude == 0.0f || longitude == 0.0f) {
         #if WEATHER_DEBUG
-        Serial.println("Weather service initialization failed: invalid parameters");
-        Serial.printf("API Key [%s], Lat [%.6f], Lon [%.6f]\n", 
+        DEBUG_PRINTLN("Weather service initialization failed: invalid parameters");
+        DEBUG_PRINTF("API Key [%s], Lat [%.6f], Lon [%.6f]\n", 
                     apiKey.isEmpty() ? "EMPTY" : apiKey.c_str(), latitude, longitude);
         #endif
         return false;
@@ -36,10 +37,10 @@ bool WeatherService::init(const String& apiKey, float latitude, float longitude,
     lang = language;
     
     #if WEATHER_DEBUG
-    Serial.println("Weather service initialized successfully");
-    Serial.printf("API Key: %s\n", appid.c_str());
-    Serial.printf("Location: %.6f, %.6f\n", lat, lon);
-    Serial.printf("Units: %s, Language: %s\n", units.c_str(), lang.c_str());
+    DEBUG_PRINTLN("Weather service initialized successfully");
+    DEBUG_PRINTF("API Key: %s\n", appid.c_str());
+    DEBUG_PRINTF("Location: %.6f, %.6f\n", lat, lon);
+    DEBUG_PRINTF("Units: %s, Language: %s\n", units.c_str(), lang.c_str());
     #endif
     
     return true;
@@ -52,9 +53,9 @@ bool WeatherService::update() {
     if (lastUpdateTime == 0 || currentTime - lastUpdateTime >= updateInterval) {
         #if WEATHER_DEBUG
         if (lastUpdateTime == 0) {
-            Serial.println("First weather update after boot");
+            DEBUG_PRINTLN("First weather update after boot");
         } else {
-            Serial.println("Weather update interval passed");
+            DEBUG_PRINTLN("Weather update interval passed");
         }
         #endif
         return forceUpdate();
@@ -77,7 +78,7 @@ bool WeatherService::forceUpdate() {
 bool WeatherService::fetchWeatherData() {
     if (!WiFi.isConnected()) {
         #if WEATHER_DEBUG
-        Serial.println("Cannot fetch weather: WiFi not connected");
+        DEBUG_PRINTLN("Cannot fetch weather: WiFi not connected");
         #endif
         return false;
     }
@@ -85,8 +86,8 @@ bool WeatherService::fetchWeatherData() {
     // Check if API key is available
     if (appid.isEmpty() || lat == 0.0f || lon == 0.0f) {
         #if WEATHER_DEBUG
-        Serial.println("Weather API configuration is incomplete:");
-        Serial.printf("API Key [%s], Lat [%.6f], Lon [%.6f]\n", 
+        DEBUG_PRINTLN("Weather API configuration is incomplete:");
+        DEBUG_PRINTF("API Key [%s], Lat [%.6f], Lon [%.6f]\n", 
                     appid.isEmpty() ? "EMPTY" : appid.c_str(), lat, lon);
         #endif
         return false;
@@ -101,7 +102,7 @@ bool WeatherService::fetchWeatherData() {
                 "&exclude=minutely,alerts";
     
     #if WEATHER_DEBUG
-    Serial.printf("Fetching weather data from: %s\n", url.c_str());
+    DEBUG_PRINTF("Fetching weather data from: %s\n", url.c_str());
     #endif
     
     http.begin(url);
@@ -109,9 +110,9 @@ bool WeatherService::fetchWeatherData() {
     
     if (httpResponseCode != 200) {
         #if WEATHER_DEBUG
-        Serial.printf("HTTP error code: %d\n", httpResponseCode);
+        DEBUG_PRINTF("HTTP error code: %d\n", httpResponseCode);
         if (httpResponseCode > 0) {
-            Serial.printf("Response: %s\n", http.getString().c_str());
+            DEBUG_PRINTF("Response: %s\n", http.getString().c_str());
         }
         #endif
         http.end();
@@ -122,8 +123,8 @@ bool WeatherService::fetchWeatherData() {
     http.end();
     
     #if WEATHER_DEBUG
-    Serial.println("Weather data fetched successfully");
-    //Serial.println(payload); // Only uncomment for debugging - this can be large
+    DEBUG_PRINTLN("Weather data fetched successfully");
+    //DEBUG_PRINTLN(payload); // Only uncomment for debugging - this can be large
     #endif
     
     // Parse JSON response
@@ -132,8 +133,8 @@ bool WeatherService::fetchWeatherData() {
     
     if (error) {
         #if WEATHER_DEBUG
-        Serial.print("JSON parsing error: ");
-        Serial.println(error.c_str());
+        DEBUG_PRINT("JSON parsing error: ");
+        DEBUG_PRINTLN(error.c_str());
         #endif
         return false;
     }
@@ -143,7 +144,7 @@ bool WeatherService::fetchWeatherData() {
     parseHourlyForecast(doc["hourly"]);
     
     #if WEATHER_DEBUG
-    Serial.println("Weather data parsed successfully");
+    DEBUG_PRINTLN("Weather data parsed successfully");
     #endif
     
     return true;
@@ -194,12 +195,12 @@ void WeatherService::parseCurrentWeather(const JsonObject& current) {
     }
     
     #if WEATHER_DEBUG
-    Serial.println("Current weather:");
-    Serial.printf("  Temperature: %.1f°C\n", currentWeather.temp);
-    Serial.printf("  Feels like: %.1f°C\n", currentWeather.feels_like);
-    Serial.printf("  Humidity: %d%%\n", currentWeather.humidity);
-    Serial.printf("  Weather: %s (%s)\n", currentWeather.weather_main.c_str(), currentWeather.weather_description.c_str());
-    Serial.printf("  Icon: %s\n", currentWeather.weather_icon.c_str());
+    DEBUG_PRINTLN("Current weather:");
+    DEBUG_PRINTF("  Temperature: %.1f°C\n", currentWeather.temp);
+    DEBUG_PRINTF("  Feels like: %.1f°C\n", currentWeather.feels_like);
+    DEBUG_PRINTF("  Humidity: %d%%\n", currentWeather.humidity);
+    DEBUG_PRINTF("  Weather: %s (%s)\n", currentWeather.weather_main.c_str(), currentWeather.weather_description.c_str());
+    DEBUG_PRINTF("  Icon: %s\n", currentWeather.weather_icon.c_str());
     #endif
 }
 
@@ -261,14 +262,14 @@ void WeatherService::parseHourlyForecast(const JsonArray& hourly) {
     }
     
     #if WEATHER_DEBUG
-    Serial.printf("Parsed %d hourly forecasts\n", hourlyForecastCount);
+    DEBUG_PRINTF("Parsed %d hourly forecasts\n", hourlyForecastCount);
     #endif
 }
 
 void WeatherService::calculateDailyForecasts() {
     if (hourlyForecastCount == 0) {
         #if WEATHER_DEBUG
-        Serial.println("No hourly forecasts available for calculation");
+        DEBUG_PRINTLN("No hourly forecasts available for calculation");
         #endif
         return;
     }
@@ -295,9 +296,9 @@ void WeatherService::calculateDailyForecasts() {
     int sunsetHour = sunsetInfo.tm_hour;
     
     #if WEATHER_DEBUG
-    Serial.printf("Current time: %02d:%02d, day: %02d.%02d\n", 
+    DEBUG_PRINTF("Current time: %02d:%02d, day: %02d.%02d\n", 
                  currentHour, timeinfo.tm_min, currentDay, currentMonth + 1);
-    Serial.printf("Sunrise: %02d:%02d, Sunset: %02d:%02d\n", 
+    DEBUG_PRINTF("Sunrise: %02d:%02d, Sunset: %02d:%02d\n", 
                  sunriseHour, sunriseInfo.tm_min, 
                  sunsetHour, sunsetInfo.tm_min);
     #endif
@@ -332,7 +333,7 @@ void WeatherService::calculateDailyForecasts() {
     if (currentHour >= sunriseHour && currentHour < NOON_HOUR) {
         // Current time is in the morning (after sunrise, before noon)
         #if WEATHER_DEBUG
-        Serial.println("Current time is in the morning period");
+        DEBUG_PRINTLN("Current time is in the morning period");
         #endif
         
         // Morning: now until noon today
@@ -360,7 +361,7 @@ void WeatherService::calculateDailyForecasts() {
     } else if (currentHour >= NOON_HOUR && currentHour < sunsetHour) {
         // Current time is in the afternoon (after noon, before sunset)
         #if WEATHER_DEBUG
-        Serial.println("Current time is in the afternoon period");
+        DEBUG_PRINTLN("Current time is in the afternoon period");
         #endif
         
         // Calculate sunrise tomorrow
@@ -391,7 +392,7 @@ void WeatherService::calculateDailyForecasts() {
     } else if (currentHour >= sunsetHour) {
         // Current time is at night after sunset but before midnight
         #if WEATHER_DEBUG
-        Serial.println("Current time is at night (after sunset, before midnight)");
+        DEBUG_PRINTLN("Current time is at night (after sunset, before midnight)");
         #endif
         
         // Calculate sunrise tomorrow
@@ -427,7 +428,7 @@ void WeatherService::calculateDailyForecasts() {
     } else {
         // Current time is after midnight and before sunrise
         #if WEATHER_DEBUG
-        Serial.println("Current time is at night (after midnight, before sunrise)");
+        DEBUG_PRINTLN("Current time is at night (after midnight, before sunrise)");
         #endif
         
         // Calculate noon today
@@ -459,15 +460,15 @@ void WeatherService::calculateDailyForecasts() {
     localtime_r(&nightStartTime, &nightStart);
     localtime_r(&nightEndTime, &nightEnd);
     
-    Serial.printf("Morning period: %02d.%02d %02d:%02d to %02d.%02d %02d:%02d\n",
+    DEBUG_PRINTF("Morning period: %02d.%02d %02d:%02d to %02d.%02d %02d:%02d\n",
                  morningStart.tm_mday, morningStart.tm_mon + 1, morningStart.tm_hour, morningStart.tm_min,
                  morningEnd.tm_mday, morningEnd.tm_mon + 1, morningEnd.tm_hour, morningEnd.tm_min);
     
-    Serial.printf("Afternoon period: %02d.%02d %02d:%02d to %02d.%02d %02d:%02d\n",
+    DEBUG_PRINTF("Afternoon period: %02d.%02d %02d:%02d to %02d.%02d %02d:%02d\n",
                  afternoonStart.tm_mday, afternoonStart.tm_mon + 1, afternoonStart.tm_hour, afternoonStart.tm_min,
                  afternoonEnd.tm_mday, afternoonEnd.tm_mon + 1, afternoonEnd.tm_hour, afternoonEnd.tm_min);
     
-    Serial.printf("Night period: %02d.%02d %02d:%02d to %02d.%02d %02d:%02d\n",
+    DEBUG_PRINTF("Night period: %02d.%02d %02d:%02d to %02d.%02d %02d:%02d\n",
                  nightStart.tm_mday, nightStart.tm_mon + 1, nightStart.tm_hour, nightStart.tm_min,
                  nightEnd.tm_mday, nightEnd.tm_mon + 1, nightEnd.tm_hour, nightEnd.tm_min);
     #endif
@@ -493,7 +494,7 @@ void WeatherService::calculateDailyForecasts() {
             if (iconCode.length() >= 3 && iconCode.charAt(iconCode.length() - 1) == 'n') {
                 iconCode = iconCode.substring(0, iconCode.length() - 1) + "d";
 #if WEATHER_DEBUG
-                Serial.printf("Converting morning icon %s to day icon %s\n", 
+                DEBUG_PRINTF("Converting morning icon %s to day icon %s\n", 
                              hourlyForecasts[i].weather_icon.c_str(), iconCode.c_str());
 #endif
             }
@@ -502,7 +503,7 @@ void WeatherService::calculateDailyForecasts() {
             
 #if WEATHER_DEBUG
             struct tm* debugTimeinfo = localtime(&forecastTime);
-            Serial.printf("Added to morning forecast: %02d.%02d %02d:%02d, icon: %s\n",
+            DEBUG_PRINTF("Added to morning forecast: %02d.%02d %02d:%02d, icon: %s\n",
                          debugTimeinfo->tm_mday, debugTimeinfo->tm_mon + 1,
                          debugTimeinfo->tm_hour, debugTimeinfo->tm_min,
                          iconCode.c_str());
@@ -519,7 +520,7 @@ void WeatherService::calculateDailyForecasts() {
             if (iconCode.length() >= 3 && iconCode.charAt(iconCode.length() - 1) == 'n') {
                 iconCode = iconCode.substring(0, iconCode.length() - 1) + "d";
 #if WEATHER_DEBUG
-                Serial.printf("Converting afternoon icon %s to day icon %s\n", 
+                DEBUG_PRINTF("Converting afternoon icon %s to day icon %s\n", 
                              hourlyForecasts[i].weather_icon.c_str(), iconCode.c_str());
 #endif
             }
@@ -528,7 +529,7 @@ void WeatherService::calculateDailyForecasts() {
             
 #if WEATHER_DEBUG
             struct tm* debugTimeinfo = localtime(&forecastTime);
-            Serial.printf("Added to afternoon forecast: %02d.%02d %02d:%02d, icon: %s\n",
+            DEBUG_PRINTF("Added to afternoon forecast: %02d.%02d %02d:%02d, icon: %s\n",
                          debugTimeinfo->tm_mday, debugTimeinfo->tm_mon + 1,
                          debugTimeinfo->tm_hour, debugTimeinfo->tm_min,
                          iconCode.c_str());
@@ -545,7 +546,7 @@ void WeatherService::calculateDailyForecasts() {
             if (iconCode.length() >= 3 && iconCode.charAt(iconCode.length() - 1) == 'd') {
                 iconCode = iconCode.substring(0, iconCode.length() - 1) + "n";
 #if WEATHER_DEBUG
-                Serial.printf("Converting night icon %s to night icon %s\n", 
+                DEBUG_PRINTF("Converting night icon %s to night icon %s\n", 
                              hourlyForecasts[i].weather_icon.c_str(), iconCode.c_str());
 #endif
             }
@@ -554,7 +555,7 @@ void WeatherService::calculateDailyForecasts() {
             
 #if WEATHER_DEBUG
             struct tm* debugTimeinfo = localtime(&forecastTime);
-            Serial.printf("Added to night forecast: %02d.%02d %02d:%02d, icon: %s\n",
+            DEBUG_PRINTF("Added to night forecast: %02d.%02d %02d:%02d, icon: %s\n",
                          debugTimeinfo->tm_mday, debugTimeinfo->tm_mon + 1,
                          debugTimeinfo->tm_hour, debugTimeinfo->tm_min,
                          iconCode.c_str());
@@ -574,7 +575,7 @@ void WeatherService::calculateDailyForecasts() {
                 morningForecast.iconCode.substring(0, morningForecast.iconCode.length() - 1) + "d";
             
             #if WEATHER_DEBUG
-            Serial.printf("Final correction: Morning icon set to %s\n", morningForecast.iconCode.c_str());
+            DEBUG_PRINTF("Final correction: Morning icon set to %s\n", morningForecast.iconCode.c_str());
             #endif
         }
     } else {
@@ -583,7 +584,7 @@ void WeatherService::calculateDailyForecasts() {
         morningForecast.iconCode = "03d"; // Default cloudy icon
         
         #if WEATHER_DEBUG
-        Serial.println("No morning forecasts found, using default icon 03d");
+        DEBUG_PRINTLN("No morning forecasts found, using default icon 03d");
         #endif
     }
     
@@ -600,7 +601,7 @@ void WeatherService::calculateDailyForecasts() {
                 afternoonForecast.iconCode.substring(0, afternoonForecast.iconCode.length() - 1) + "d";
             
             #if WEATHER_DEBUG
-            Serial.printf("Final correction: Afternoon icon set to %s\n", afternoonForecast.iconCode.c_str());
+            DEBUG_PRINTF("Final correction: Afternoon icon set to %s\n", afternoonForecast.iconCode.c_str());
             #endif
         }
     } else {
@@ -609,7 +610,7 @@ void WeatherService::calculateDailyForecasts() {
         afternoonForecast.iconCode = "03d"; // Default cloudy icon
         
         #if WEATHER_DEBUG
-        Serial.println("No afternoon forecasts found, using default icon 03d");
+        DEBUG_PRINTLN("No afternoon forecasts found, using default icon 03d");
         #endif
     }
     
@@ -626,7 +627,7 @@ void WeatherService::calculateDailyForecasts() {
                 nightForecast.iconCode.substring(0, nightForecast.iconCode.length() - 1) + "n";
             
             #if WEATHER_DEBUG
-            Serial.printf("Final correction: Night icon set to %s\n", nightForecast.iconCode.c_str());
+            DEBUG_PRINTF("Final correction: Night icon set to %s\n", nightForecast.iconCode.c_str());
             #endif
         }
     } else {
@@ -635,19 +636,19 @@ void WeatherService::calculateDailyForecasts() {
         nightForecast.iconCode = "03n"; // Default cloudy night icon
         
         #if WEATHER_DEBUG
-        Serial.println("No night forecasts found, using default icon 03n");
+        DEBUG_PRINTLN("No night forecasts found, using default icon 03n");
         #endif
     }
     
     #if WEATHER_DEBUG
-    Serial.println("Final forecast summary:");
-    Serial.printf("  Morning: %.1f°C, %d%% pop, icon: %s (%d datapoints)\n", 
+    DEBUG_PRINTLN("Final forecast summary:");
+    DEBUG_PRINTF("  Morning: %.1f°C, %d%% pop, icon: %s (%d datapoints)\n", 
                  morningForecast.avgTemp, (int)(morningForecast.avgPop * 100), 
                  morningForecast.iconCode.c_str(), morningCount);
-    Serial.printf("  Afternoon: %.1f°C, %d%% pop, icon: %s (%d datapoints)\n", 
+    DEBUG_PRINTF("  Afternoon: %.1f°C, %d%% pop, icon: %s (%d datapoints)\n", 
                  afternoonForecast.avgTemp, (int)(afternoonForecast.avgPop * 100), 
                  afternoonForecast.iconCode.c_str(), afternoonCount);
-    Serial.printf("  Night: %.1f°C, %d%% pop, icon: %s (%d datapoints)\n", 
+    DEBUG_PRINTF("  Night: %.1f°C, %d%% pop, icon: %s (%d datapoints)\n", 
                  nightForecast.avgTemp, (int)(nightForecast.avgPop * 100), 
                  nightForecast.iconCode.c_str(), nightCount);
     #endif
@@ -656,15 +657,15 @@ void WeatherService::calculateDailyForecasts() {
 String WeatherService::getMostFrequentIcon(const std::vector<String>& icons) {
     if (icons.empty()) {
 #if WEATHER_DEBUG
-        Serial.println("Warning: Empty icons vector in getMostFrequentIcon, using default icon");
+        DEBUG_PRINTLN("Warning: Empty icons vector in getMostFrequentIcon, using default icon");
 #endif
         return "01d"; // Default clear sky day icon
     }
     
 #if WEATHER_DEBUG
-    Serial.printf("Getting most frequent icon from %d icons:\n", icons.size());
+    DEBUG_PRINTF("Getting most frequent icon from %d icons:\n", icons.size());
     for (size_t i = 0; i < icons.size(); i++) {
-        Serial.printf("  Icon %d: %s\n", i, icons[i].c_str());
+        DEBUG_PRINTF("  Icon %d: %s\n", i, icons[i].c_str());
     }
 #endif
     
@@ -691,12 +692,12 @@ String WeatherService::getMostFrequentIcon(const std::vector<String>& icons) {
     int maxCount = 0;
     
 #if WEATHER_DEBUG
-    Serial.println("Icon counts:");
+    DEBUG_PRINTLN("Icon counts:");
 #endif
     
     for (const auto& pair : iconCount) {
 #if WEATHER_DEBUG
-        Serial.printf("  %s: %d occurrences\n", pair.first.c_str(), pair.second);
+        DEBUG_PRINTF("  %s: %d occurrences\n", pair.first.c_str(), pair.second);
 #endif
         if (pair.second > maxCount) {
             maxCount = pair.second;
@@ -705,7 +706,7 @@ String WeatherService::getMostFrequentIcon(const std::vector<String>& icons) {
     }
     
 #if WEATHER_DEBUG
-    Serial.printf("Most frequent icon selected: %s\n", mostFrequentIcon.c_str());
+    DEBUG_PRINTF("Most frequent icon selected: %s\n", mostFrequentIcon.c_str());
 #endif
     
     return mostFrequentIcon;
@@ -803,7 +804,7 @@ void WeatherService::updateWeatherUI() {
     // If there's a secondary weather icon, it should be updated here
 
     #if WEATHER_DEBUG
-    Serial.println("Weather UI updated");
+    DEBUG_PRINTLN("Weather UI updated");
     #endif
 }
 

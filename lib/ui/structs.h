@@ -17,14 +17,14 @@ enum FlowStructures {
     FLOW_STRUCTURE_WEATHER = 16384,
     FLOW_STRUCTURE_DATE_STRUC = 16385,
     FLOW_STRUCTURE_PLAYBACK_STRUC = 16386,
-    FLOW_STRUCTURE_STATION_STRUCT = 16387
+    FLOW_STRUCTURE_STATION = 16387
 };
 
 enum FlowArrayOfStructures {
     FLOW_ARRAY_OF_STRUCTURE_WEATHER = 81920,
     FLOW_ARRAY_OF_STRUCTURE_DATE_STRUC = 81921,
     FLOW_ARRAY_OF_STRUCTURE_PLAYBACK_STRUC = 81922,
-    FLOW_ARRAY_OF_STRUCTURE_STATION_STRUCT = 81923
+    FLOW_ARRAY_OF_STRUCTURE_STATION = 81923
 };
 
 enum WeatherFlowStructureFields {
@@ -48,11 +48,11 @@ enum PlaybackStrucFlowStructureFields {
     FLOW_STRUCTURE_PLAYBACK_STRUC_NUM_FIELDS
 };
 
-enum StationStructFlowStructureFields {
-    FLOW_STRUCTURE_STATION_STRUCT_FIELD_NAME = 0,
-    FLOW_STRUCTURE_STATION_STRUCT_FIELD_URL = 1,
-    FLOW_STRUCTURE_STATION_STRUCT_FIELD_FAVORITE = 2,
-    FLOW_STRUCTURE_STATION_STRUCT_NUM_FIELDS
+enum StationFlowStructureFields {
+    FLOW_STRUCTURE_STATION_FIELD_NAME = 0,
+    FLOW_STRUCTURE_STATION_FIELD_URL = 1,
+    FLOW_STRUCTURE_STATION_FIELD_FAVORITE = 2,
+    FLOW_STRUCTURE_STATION_NUM_FIELDS
 };
 
 struct WeatherValue {
@@ -163,42 +163,42 @@ struct PlaybackStrucValue {
 };
 
 typedef ArrayOf<PlaybackStrucValue, FLOW_ARRAY_OF_STRUCTURE_PLAYBACK_STRUC> ArrayOfPlaybackStrucValue;
-struct StationStructValue {
+struct StationValue {
     Value value;
     
-    StationStructValue() {
-        value = Value::makeArrayRef(FLOW_STRUCTURE_STATION_STRUCT_NUM_FIELDS, FLOW_STRUCTURE_STATION_STRUCT, 0);
+    StationValue() {
+        value = Value::makeArrayRef(FLOW_STRUCTURE_STATION_NUM_FIELDS, FLOW_STRUCTURE_STATION, 0);
     }
     
-    StationStructValue(Value value) : value(value) {}
+    StationValue(Value value) : value(value) {}
     
     operator Value() const { return value; }
     
     operator bool() const { return value.isArray(); }
     
     const char *name() {
-        return value.getArray()->values[FLOW_STRUCTURE_STATION_STRUCT_FIELD_NAME].getString();
+        return value.getArray()->values[FLOW_STRUCTURE_STATION_FIELD_NAME].getString();
     }
     void name(const char *name) {
-        value.getArray()->values[FLOW_STRUCTURE_STATION_STRUCT_FIELD_NAME] = StringValue(name);
+        value.getArray()->values[FLOW_STRUCTURE_STATION_FIELD_NAME] = StringValue(name);
     }
     
     const char *url() {
-        return value.getArray()->values[FLOW_STRUCTURE_STATION_STRUCT_FIELD_URL].getString();
+        return value.getArray()->values[FLOW_STRUCTURE_STATION_FIELD_URL].getString();
     }
     void url(const char *url) {
-        value.getArray()->values[FLOW_STRUCTURE_STATION_STRUCT_FIELD_URL] = StringValue(url);
+        value.getArray()->values[FLOW_STRUCTURE_STATION_FIELD_URL] = StringValue(url);
     }
     
     bool favorite() {
-        return value.getArray()->values[FLOW_STRUCTURE_STATION_STRUCT_FIELD_FAVORITE].getBoolean();
+        return value.getArray()->values[FLOW_STRUCTURE_STATION_FIELD_FAVORITE].getBoolean();
     }
     void favorite(bool favorite) {
-        value.getArray()->values[FLOW_STRUCTURE_STATION_STRUCT_FIELD_FAVORITE] = BooleanValue(favorite);
+        value.getArray()->values[FLOW_STRUCTURE_STATION_FIELD_FAVORITE] = BooleanValue(favorite);
     }
 };
 
-typedef ArrayOf<StationStructValue, FLOW_ARRAY_OF_STRUCTURE_STATION_STRUCT> ArrayOfStationStructValue;
+typedef ArrayOf<StationValue, FLOW_ARRAY_OF_STRUCTURE_STATION> ArrayOfStationValue;
 
 
 #endif

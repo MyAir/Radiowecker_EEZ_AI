@@ -39,7 +39,7 @@ static void populate_alarm_edit_screen() {
 
     if (alarm) { // Editing existing alarm
         #if ALARM_UI_DEBUG
-        Serial.printf("Populating edit screen for alarm %d.\n", alarm->id);
+        DEBUG_PRINTF("Populating edit screen for alarm %d.\n", alarm->id);
         #endif
         // Populate UI fields
         lv_textarea_set_text(objects.alarm_title_textarea, alarm->title.c_str());
@@ -56,7 +56,7 @@ static void populate_alarm_edit_screen() {
         // updates based on the switch's new state. This is necessary because
         // lv_obj_add/clear_state does not fire this event automatically.
         #if ALARM_UI_DEBUG
-        Serial.println("Manually sending VALUE_CHANGED event to alarm_repeat_switch.");
+        DEBUG_PRINTLN("Manually sending VALUE_CHANGED event to alarm_repeat_switch.");
         #endif
         lv_obj_send_event(objects.alarm_repeat_switch, LV_EVENT_VALUE_CHANGED, NULL);
 
@@ -72,7 +72,7 @@ static void populate_alarm_edit_screen() {
 
     } else { // Adding new alarm
         #if ALARM_UI_DEBUG
-        Serial.println("Populating edit screen with default values for new alarm.");
+        DEBUG_PRINTLN("Populating edit screen with default values for new alarm.");
         #endif
         // Set to default values
         lv_textarea_set_text(objects.alarm_title_textarea, "New Alarm");
@@ -92,7 +92,7 @@ static void populate_alarm_edit_screen() {
         // updates based on the switch's new state. This is necessary because
         // lv_obj_add/clear_state does not fire this event automatically.
         #if ALARM_UI_DEBUG
-        Serial.println("Manually sending VALUE_CHANGED event to alarm_repeat_switch for new alarm.");
+        DEBUG_PRINTLN("Manually sending VALUE_CHANGED event to alarm_repeat_switch for new alarm.");
         #endif
         lv_obj_send_event(objects.alarm_repeat_switch, LV_EVENT_VALUE_CHANGED, NULL);
     }
@@ -104,7 +104,7 @@ void alarm_edit_screen_load_handler(lv_event_t *e) {
 
     if (code == LV_EVENT_SCREEN_LOAD_START) {
         #if ALARM_UI_DEBUG
-        Serial.println("Alarm edit screen: LOAD_START. Creating keyboard.");
+        DEBUG_PRINTLN("Alarm edit screen: LOAD_START. Creating keyboard.");
         #endif
         // Create and configure the keyboard for the text area
         keyboard = lv_keyboard_create(lv_screen_active());
@@ -112,12 +112,12 @@ void alarm_edit_screen_load_handler(lv_event_t *e) {
         lv_obj_add_event_cb(objects.alarm_title_textarea, alarm_title_textarea_event_handler, LV_EVENT_ALL, NULL);
     } else if (code == LV_EVENT_SCREEN_LOADED) {
         #if ALARM_UI_DEBUG
-        Serial.println("Alarm edit screen: LOADED. Populating screen.");
+        DEBUG_PRINTLN("Alarm edit screen: LOADED. Populating screen.");
         #endif
         populate_alarm_edit_screen();
     } else if (code == LV_EVENT_SCREEN_UNLOAD_START) {
         #if ALARM_UI_DEBUG
-        Serial.println("Alarm edit screen: UNLOAD_START. Deleting keyboard.");
+        DEBUG_PRINTLN("Alarm edit screen: UNLOAD_START. Deleting keyboard.");
         #endif
         if (keyboard) {
             lv_obj_del(keyboard);
@@ -133,7 +133,7 @@ void save_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
         #if ALARM_UI_DEBUG
-        Serial.println("Save button clicked. Saving data...");
+        DEBUG_PRINTLN("Save button clicked. Saving data...");
         #endif
         AlarmManager* am = AlarmManager::getInstance();
         Alarm alarm_data;
@@ -147,7 +147,7 @@ void save_button_event_handler(lv_event_t *e) {
             } else {
                 // Error state: in edit mode but no alarm is selected for editing.
                 #if ALARM_UI_DEBUG
-                Serial.println("ERROR: Save clicked in EDIT mode, but no alarm is being edited.");
+                DEBUG_PRINTLN("ERROR: Save clicked in EDIT mode, but no alarm is being edited.");
                 #endif
                 return; // Abort save
             }
@@ -190,7 +190,7 @@ void add_alarm_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
         #if ALARM_UI_DEBUG
-        Serial.println("Add Alarm button clicked. Setting state and populating screen.");
+        DEBUG_PRINTLN("Add Alarm button clicked. Setting state and populating screen.");
         #endif
         AlarmManager::getInstance()->deselectAlarm(); // Deselect to prevent stray focus events on the next screen
         AlarmManager::getInstance()->startAddAlarm();
@@ -204,7 +204,7 @@ void cancel_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
         #if ALARM_UI_DEBUG
-        Serial.println("Cancel button clicked. No action needed.");
+        DEBUG_PRINTLN("Cancel button clicked. No action needed.");
         #endif
         // Screen transition is now handled by EEZ-Flow
     }
@@ -220,7 +220,7 @@ void alarm_entry_focus_event_handler(lv_event_t *e) {
         AlarmManager::getInstance()->setSelectedAlarm(alarm_id, target_obj);
 
         #if ALARM_UI_DEBUG
-        Serial.printf("Alarm %d focused.\n", alarm_id);
+        DEBUG_PRINTF("Alarm %d focused.\n", alarm_id);
         #endif
     } else if (code == LV_EVENT_DEFOCUSED) {
         // Only deselect if an alarm is currently selected to prevent double-firing
@@ -228,7 +228,7 @@ void alarm_entry_focus_event_handler(lv_event_t *e) {
             AlarmManager::getInstance()->deselectAlarm();
 
             #if ALARM_UI_DEBUG
-            Serial.println("Alarm defocused.");
+            DEBUG_PRINTLN("Alarm defocused.");
             #endif
         }
     }
@@ -242,7 +242,7 @@ void edit_button_event_handler(lv_event_t *e) {
         int alarmId = am->getSelectedAlarmId();
         if (alarmId != -1) {
             #if ALARM_UI_DEBUG
-            Serial.printf("Edit button clicked for alarm %d. Setting state and populating screen.\n", alarmId);
+            DEBUG_PRINTF("Edit button clicked for alarm %d. Setting state and populating screen.\n", alarmId);
             #endif
             am->deselectAlarm(); // Deselect to prevent stray focus events on the next screen
             am->startEditAlarm(alarmId);
@@ -250,7 +250,7 @@ void edit_button_event_handler(lv_event_t *e) {
             // The population will be handled by the LV_EVENT_SCREEN_LOADED event.
         } else {
             #if ALARM_UI_DEBUG
-            Serial.println("Edit button clicked, but no alarm selected.");
+            DEBUG_PRINTLN("Edit button clicked, but no alarm selected.");
             #endif
         }
     }
@@ -261,7 +261,7 @@ void delete_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
         #if ALARM_UI_DEBUG
-        Serial.println("Delete button clicked.");
+        DEBUG_PRINTLN("Delete button clicked.");
         #endif
         AlarmManager::getInstance()->deleteSelectedAlarm();
     }
@@ -288,7 +288,7 @@ void calendar_date_selection_event_handler(lv_event_t *e) {
         lv_calendar_set_highlighted_dates(objects.calendar_selector, &last_selected_date, 1);
         
         #if ALARM_UI_DEBUG
-        Serial.printf("[CALENDAR] Date selected: %02d.%02d.%04d (highlighted)\n", 
+        DEBUG_PRINTF("[CALENDAR] Date selected: %02d.%02d.%04d (highlighted)\n", 
                      last_selected_date.day, last_selected_date.month, last_selected_date.year);
         #endif
     }
@@ -337,7 +337,7 @@ void show_calendar_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
         #if ALARM_UI_DEBUG
-        Serial.println("[CALENDAR] Show calendar button clicked. Initializing calendar.");
+        DEBUG_PRINTLN("[CALENDAR] Show calendar button clicked. Initializing calendar.");
         #endif
         
         // Get the current alarm date from the label
@@ -370,7 +370,7 @@ void show_calendar_button_event_handler(lv_event_t *e) {
         lv_calendar_set_highlighted_dates(objects.calendar_selector, &date_to_show, 1);
         
         #if ALARM_UI_DEBUG
-        Serial.printf("Calendar initialized with date: %02d.%02d.%04d\n", 
+        DEBUG_PRINTF("Calendar initialized with date: %02d.%02d.%04d\n", 
                      date_to_show.day, date_to_show.month, date_to_show.year);
         #endif
         
@@ -383,14 +383,14 @@ void calendar_ok_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
         #if ALARM_UI_DEBUG
-        Serial.println("[CALENDAR] Calendar OK button clicked.");
+        DEBUG_PRINTLN("[CALENDAR] Calendar OK button clicked.");
         #endif
         
         // Use the date tracked by our calendar event handler
         lv_calendar_date_t selected_date = last_selected_date;
         
         #if ALARM_UI_DEBUG
-        Serial.printf("[CALENDAR] Selected date: %02d.%02d.%04d (user_selected: %s)\n", 
+        DEBUG_PRINTF("[CALENDAR] Selected date: %02d.%02d.%04d (user_selected: %s)\n", 
                      selected_date.day, selected_date.month, selected_date.year,
                      has_user_selected_date ? "yes" : "no");
         #endif
@@ -404,11 +404,11 @@ void calendar_ok_button_event_handler(lv_event_t *e) {
             lv_label_set_text(objects.alarm_date_label, date_str);
             
             #if ALARM_UI_DEBUG
-            Serial.printf("Calendar date selected and saved: %s\n", date_str);
+            DEBUG_PRINTF("Calendar date selected and saved: %s\n", date_str);
             #endif
         } else {
             #if ALARM_UI_DEBUG
-            Serial.println("No valid date selected in calendar, no changes made.");
+            DEBUG_PRINTLN("No valid date selected in calendar, no changes made.");
             #endif
         }
         
@@ -423,7 +423,7 @@ void calendar_cancel_button_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
         #if ALARM_UI_DEBUG
-        Serial.println("[CALENDAR] Calendar Cancel button clicked. No changes made.");
+        DEBUG_PRINTLN("[CALENDAR] Calendar Cancel button clicked. No changes made.");
         #endif
         
         // Restore the original date if there was one
@@ -449,6 +449,9 @@ void calendar_cancel_button_event_handler(lv_event_t *e) {
 // External reference to global AudioManager instance
 extern AudioManager audioManager;
 
+// Track the currently selected station index
+static int selectedStationIndex = 0;
+
 /**
  * @brief Handler for radio station dropdown selection change
  * @param e LVGL event containing the dropdown selection
@@ -456,12 +459,17 @@ extern AudioManager audioManager;
 void radio_station_changed_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t* dropdown = static_cast<lv_obj_t*>(lv_event_get_target(e));
+        selectedStationIndex = lv_dropdown_get_selected(dropdown);
+        
 #if AUDIO_DEBUG
-        Serial.println("[RADIO] Station selection changed");
+        DEBUG_PRINTF("[RADIO] Station selection changed to index: %d\n", selectedStationIndex);
+        if (selectedStationIndex < g_stations.size()) {
+            const Station& station = g_stations[selectedStationIndex];
+            DEBUG_PRINTF("[RADIO] Selected station: %s\n", station.name.c_str());
+            DEBUG_PRINTF("[RADIO] Station URL: %s\n", station.url.c_str());
+        }
 #endif
-        // Note: Station data will be handled via EEZ Studio databinding
-        // The selected station URL will be available through the StationList data source
-        // No direct action needed here as the play button will use the selected station
     }
 }
 
@@ -473,25 +481,18 @@ void radio_play_button_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
 #if AUDIO_DEBUG
-        Serial.println("[RADIO] Play button clicked");
+        DEBUG_PRINTLN("[RADIO] Play button clicked");
 #endif
         
-        // Get the selected station from ConfigManager
-        ConfigManager* configManager = ConfigManager::getInstance();
-        if (configManager) {
-            // Get radio stations array
-            JsonArray stations = configManager->getRadioStations();
-            if (!stations.isNull() && stations.size() > 0) {
-                // For now, use the first station. In a full implementation,
-                // this would get the selected station index from the UI dropdown
-                // via EEZ Studio databinding
-                JsonObject station = stations[0];
-                String stationUrl = station["url"].as<String>();
-                String stationName = station["name"].as<String>();
+        // Get the selected station from g_stations vector
+        if (g_stations.size() > 0 && selectedStationIndex >= 0 && selectedStationIndex < g_stations.size()) {
+            const Station& station = g_stations[selectedStationIndex];
+            String stationUrl = station.url;
+            String stationName = station.name;
                 
                 if (stationUrl.length() > 0) {
 #if AUDIO_DEBUG
-                    Serial.printf("[RADIO] Starting playback: %s\n", stationName.c_str());
+                    DEBUG_PRINTF("[RADIO] Starting playback: %s\n", stationName.c_str());
 #endif
                     // Update PlaybackInfo struct for UI databinding
                     strncpy(g_playbackInfo.Title, stationName.c_str(), sizeof(g_playbackInfo.Title) - 1);
@@ -505,16 +506,15 @@ void radio_play_button_handler(lv_event_t *e) {
                     
                     // Start audio playback
                     audioManager.connecttohost(stationUrl.c_str());
-                } else {
-#if AUDIO_DEBUG
-                    Serial.println("[RADIO] Error: Station URL is empty");
-#endif
-                }
             } else {
 #if AUDIO_DEBUG
-                Serial.println("[RADIO] Error: No stations available");
+                DEBUG_PRINTLN("[RADIO] Error: Station URL is empty");
 #endif
             }
+        } else {
+#if AUDIO_DEBUG
+            DEBUG_PRINTF("[RADIO] Error: Invalid station selection (index: %d, available: %d)\n", selectedStationIndex, (int)g_stations.size());
+#endif
         }
     }
 }
@@ -527,7 +527,7 @@ void radio_stop_button_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
 #if AUDIO_DEBUG
-        Serial.println("[RADIO] Stop button clicked");
+        DEBUG_PRINTLN("[RADIO] Stop button clicked");
 #endif
         
         // Stop audio playback
@@ -556,7 +556,7 @@ void radio_volume_changed_handler(lv_event_t *e) {
         int32_t volume = lv_slider_get_value(slider);
         
 #if AUDIO_DEBUG
-        Serial.printf("[RADIO] Volume changed to: %d%%\n", (int)volume);
+        DEBUG_PRINTF("[RADIO] Volume changed to: %d%%\n", (int)volume);
 #endif
         
         // Set audio volume (0-100 range)

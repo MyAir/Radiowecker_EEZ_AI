@@ -36,30 +36,30 @@ bool UIManager::initSensors() {
     // Initialize SHT31. The I2C bus is now correctly passed in the constructor.
     if (!sht31->begin(0x44)) {
 #if SENSOR_DEBUG
-        Serial.println("Couldn't find SHT31 sensor on I2C bus 1!");
+        DEBUG_PRINTLN("Couldn't find SHT31 sensor on I2C bus 1!");
 #endif
         success = false;
     } else {
         sht31Initialized = true;
 #if SENSOR_DEBUG
-        Serial.println("SHT31 sensor initialized successfully");
+        DEBUG_PRINTLN("SHT31 sensor initialized successfully");
 #endif
     }
 
     // Initialize SGP30 VOC and eCO2 sensor using the shared Wire1 bus.
     if (!sgp30->begin(&Wire1)) {
 #if SENSOR_DEBUG
-        Serial.println("Couldn't find SGP30 sensor on I2C bus 1!");
+        DEBUG_PRINTLN("Couldn't find SGP30 sensor on I2C bus 1!");
 #endif
         success = false;
     } else {
         sgp30Initialized = true;
 #if SENSOR_DEBUG
-        Serial.println("SGP30 sensor initialized successfully");
-        Serial.print("Found SGP30 serial #");
-        Serial.print(sgp30->serialnumber[0], HEX);
-        Serial.print(sgp30->serialnumber[1], HEX);
-        Serial.println(sgp30->serialnumber[2], HEX);
+        DEBUG_PRINTLN("SGP30 sensor initialized successfully");
+        DEBUG_PRINT("Found SGP30 serial #");
+        DEBUG_PRINT(sgp30->serialnumber[0], HEX);
+        DEBUG_PRINT(sgp30->serialnumber[1], HEX);
+        DEBUG_PRINTLN(sgp30->serialnumber[2], HEX);
 #endif
         // Initialize IAQ algorithm baseline
         sgp30->IAQinit();
@@ -73,7 +73,7 @@ bool UIManager::initSensors() {
         // If we have valid baseline values, set them
         if (eco2_baseline > 0 && tvoc_baseline > 0) {
 #if SENSOR_DEBUG
-            Serial.printf("Setting SGP30 baselines: eCO2=0x%X, TVOC=0x%X\n", eco2_baseline, tvoc_baseline);
+            DEBUG_PRINTF("Setting SGP30 baselines: eCO2=0x%X, TVOC=0x%X\n", eco2_baseline, tvoc_baseline);
 #endif
             sgp30->setIAQBaseline(eco2_baseline, tvoc_baseline);
         }
@@ -113,12 +113,12 @@ void UIManager::updateTemperature(float temp) {
             lastTemperature = temp;
             
 #if SENSOR_DEBUG
-            Serial.printf("Temperature updated: %.1f°C\n", temp);
+            DEBUG_PRINTF("Temperature updated: %.1f°C\n", temp);
 #endif
         }
     } else {
 #if SENSOR_DEBUG
-        Serial.println("Temperature label not found in UI");
+        DEBUG_PRINTLN("Temperature label not found in UI");
 #endif
     }
 }
@@ -148,12 +148,12 @@ void UIManager::updateHumidity(float humidity) {
             lastHumidity = humidity;
             
 #if SENSOR_DEBUG
-            Serial.printf("Humidity updated: %.0f%%\n", humidity);
+            DEBUG_PRINTF("Humidity updated: %.0f%%\n", humidity);
 #endif
         }
     } else {
 #if SENSOR_DEBUG
-        Serial.println("Humidity label not found in UI");
+        DEBUG_PRINTLN("Humidity label not found in UI");
 #endif
     }
 }
@@ -187,12 +187,12 @@ void UIManager::updateTVOC(uint16_t tvoc) {
             lastTVOC = tvoc;
             
 #if SENSOR_DEBUG
-            Serial.printf("TVOC updated: %d ppb\n", tvoc);
+            DEBUG_PRINTF("TVOC updated: %d ppb\n", tvoc);
 #endif
         }
     } else {
 #if SENSOR_DEBUG
-        Serial.println("TVOC label not found in UI");
+        DEBUG_PRINTLN("TVOC label not found in UI");
 #endif
     }
 }
@@ -226,12 +226,12 @@ void UIManager::updateCO2(uint16_t eco2) {
             lastECO2 = eco2;
             
 #if SENSOR_DEBUG
-            Serial.printf("eCO2 updated: %d ppm\n", eco2);
+            DEBUG_PRINTF("eCO2 updated: %d ppm\n", eco2);
 #endif
         }
     } else {
 #if SENSOR_DEBUG
-        Serial.println("CO2 label not found in UI");
+        DEBUG_PRINTLN("CO2 label not found in UI");
 #endif
     }
 }
@@ -251,7 +251,7 @@ void UIManager::updateEnvironmentalData() {
             updateTemperature(temperature);
         } else {
 #if SENSOR_DEBUG
-            Serial.println("Invalid temperature reading (NaN)");
+            DEBUG_PRINTLN("Invalid temperature reading (NaN)");
 #endif
         }
         
@@ -259,7 +259,7 @@ void UIManager::updateEnvironmentalData() {
             updateHumidity(humidity);
         } else {
 #if SENSOR_DEBUG
-            Serial.println("Invalid humidity reading (NaN)");
+            DEBUG_PRINTLN("Invalid humidity reading (NaN)");
 #endif
         }
     }
@@ -276,7 +276,7 @@ void UIManager::updateEnvironmentalData() {
             handleSGP30Baseline();
         } else {
 #if SENSOR_DEBUG
-            Serial.println("Failed to read from SGP30 sensor");
+            DEBUG_PRINTLN("Failed to read from SGP30 sensor");
 #endif
         }
     }
@@ -288,14 +288,14 @@ void UIManager::handleSGP30Baseline() {
     
     #if SENSOR_DEBUG
     // Debug output for baseline timing
-    Serial.print("handleSGP30Baseline called. Current time: ");
-    Serial.print(currentTime);
-    Serial.print(", lastBaselineTime: ");
-    Serial.print(lastBaselineTime);
-    Serial.print(", diff: ");
-    Serial.print(currentTime - lastBaselineTime);
-    Serial.print(", threshold: ");
-    Serial.println(SGP30_BASELINE_INTERVAL_MS);
+    DEBUG_PRINT("handleSGP30Baseline called. Current time: ");
+    DEBUG_PRINT(currentTime);
+    DEBUG_PRINT(", lastBaselineTime: ");
+    DEBUG_PRINT(lastBaselineTime);
+    DEBUG_PRINT(", diff: ");
+    DEBUG_PRINT(currentTime - lastBaselineTime);
+    DEBUG_PRINT(", threshold: ");
+    DEBUG_PRINTLN(SGP30_BASELINE_INTERVAL_MS);
     #endif
     
     // Check if it's time to read/save the baseline (every hour)
@@ -312,11 +312,11 @@ void UIManager::handleSGP30Baseline() {
             preferences.end();
             
 #if SENSOR_DEBUG
-            Serial.printf("SGP30 baselines saved: eCO2=0x%X, TVOC=0x%X\n", eco2_baseline, tvoc_baseline);
+            DEBUG_PRINTF("SGP30 baselines saved: eCO2=0x%X, TVOC=0x%X\n", eco2_baseline, tvoc_baseline);
 #endif
         } else {
 #if SENSOR_DEBUG
-            Serial.println("Failed to get SGP30 baseline values");
+            DEBUG_PRINTLN("Failed to get SGP30 baseline values");
 #endif
         }
     }
@@ -334,8 +334,8 @@ void UIManager::updateTimeUI() {
         eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_CURRENT_TIME, eez::StringValue(timeString));
         
 #if TIME_DEBUG
-        Serial.print("Time updated via EEZ global variable: ");
-        Serial.println(timeString);
+        DEBUG_PRINT("Time updated via EEZ global variable: ");
+        DEBUG_PRINTLN(timeString);
 #endif
     }
 }
@@ -366,8 +366,8 @@ void UIManager::updateDateUI() {
         eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_CURRENT_DATE, eez::StringValue(dateString));
         
 #if TIME_DEBUG
-        Serial.print("Date updated via EEZ global variable: ");
-        Serial.println(dateString);
+        DEBUG_PRINT("Date updated via EEZ global variable: ");
+        DEBUG_PRINTLN(dateString);
 #endif
     }
 }
@@ -447,12 +447,12 @@ void UIManager::updateWiFiStatusUI() {
         
         // Debug output
 #if STATUS_DEBUG
-        Serial.print("Updating WiFi UI - SSID: ");
-        Serial.print(ssid);
-        Serial.print(", IP: ");
-        Serial.print(ip);
-        Serial.print(", Quality: ");
-        Serial.println(qualityStr);
+        DEBUG_PRINT("Updating WiFi UI - SSID: ");
+        DEBUG_PRINT(ssid);
+        DEBUG_PRINT(", IP: ");
+        DEBUG_PRINT(ip);
+        DEBUG_PRINT(", Quality: ");
+        DEBUG_PRINTLN(qualityStr);
 #endif
         
         // Update global variables for data binding instead of UI elements directly
@@ -491,7 +491,7 @@ void UIManager::updateWiFiStatusUI() {
 
         
 #if STATUS_DEBUG
-        Serial.println("WiFi not connected, updated UI accordingly");
+        DEBUG_PRINTLN("WiFi not connected, updated UI accordingly");
 #endif
     }
 }
@@ -518,17 +518,17 @@ void UIManager::updateWeatherData() {
     unsigned long currentTime = ::millis();
     
     // Debug output for weather timing
-    Serial.print("updateWeatherData called. Current time: ");
-    Serial.print(currentTime);
-    Serial.print(", lastWeatherUpdateTime: ");
-    Serial.print(lastWeatherUpdateTime);
-    Serial.print(", diff: ");
-    Serial.println(currentTime - lastWeatherUpdateTime);
+    DEBUG_PRINT("updateWeatherData called. Current time: ");
+    DEBUG_PRINT(currentTime);
+    DEBUG_PRINT(", lastWeatherUpdateTime: ");
+    DEBUG_PRINT(lastWeatherUpdateTime);
+    DEBUG_PRINT(", diff: ");
+    DEBUG_PRINTLN(currentTime - lastWeatherUpdateTime);
     
     // Check if WiFi is connected - can't update weather without network
     if (WiFi.status() != WL_CONNECTED) {
         #if WEATHER_DEBUG
-        Serial.println("Cannot update weather: WiFi not connected");
+        DEBUG_PRINTLN("Cannot update weather: WiFi not connected");
         #endif
         return;
     }
@@ -542,11 +542,11 @@ void UIManager::updateWeatherData() {
         lastWeatherUpdateTime = ::millis();
         
         #if WEATHER_DEBUG
-        Serial.println("Weather data updated successfully");
+        DEBUG_PRINTLN("Weather data updated successfully");
         #endif
     } else {
         #if WEATHER_DEBUG
-        Serial.println("No weather update needed yet");
+        DEBUG_PRINTLN("No weather update needed yet");
         #endif
     }
 }
